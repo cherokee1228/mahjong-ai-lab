@@ -2,7 +2,7 @@
   "name": "Mahjong AI Lab",
   "short_name": "Mahjong AI",
   "lang": "ja",
-  "start_url": "./?v=272",
+  "start_url": "./?v=273",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f3f5f2",
