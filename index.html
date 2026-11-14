@@ -21,7 +21,7 @@ footer{text-align:center;color:#8a9690;font-size:11px;margin-top:25px}
 </style>
 </head>
 <body>
-<header><div class="brand"><div class="mark">牌</div><div><h1>Mahjong AI Lab</h1><small>SELF-LEARNING MAHJONG ENGINE</small></div></div><div class="status">WEB APP · v2.7.1</div></header>
+<header><div class="brand"><div class="mark">牌</div><div><h1>Mahjong AI Lab</h1><small>SELF-LEARNING MAHJONG ENGINE</small></div></div><div class="status">WEB APP · v2.7.2</div></header>
 <main>
 <div class="intro"><div><h2>麻雀AI研究室</h2><p>牌譜を蓄積し、局面を再現し、AI評価へつなげるための作業環境。</p></div><div class="notice">データはこのブラウザ内に保存されます</div></div>
 <nav>
@@ -211,10 +211,15 @@ footer{text-align:center;color:#8a9690;font-size:11px;margin-top:25px}
 <p class="help">計算基準：標準的な四人打ちリーチ麻雀、100点単位切り上げ、切り上げ満貫なし。役満は13翻相当として扱い、役満・ダブル役満は別枠で計算します。符・翻の正しい判定は入力者が確認してください。</p>
 </div>
 </section>
-<footer>Mahjong AI Lab · Prototype 1.5 · データは端末内のブラウザに保存</footer>
+<footer>Mahjong AI Lab · Web App 2.7.2 · データは端末内のブラウザに保存</footer>
 </main>
 <script>
 const KEY='mahjong-ai-lab-v01';
+window.addEventListener('error',ev=>{
+ const status=document.getElementById('playStatus');
+ if(status && ev.message) status.textContent='JavaScriptエラー：'+ev.message;
+});
+
 let games=JSON.parse(localStorage.getItem(KEY)||'[]'), draftRounds=[];
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -1421,7 +1426,20 @@ function spectatorStep(){
  game.turn=(seat+1)%4;game.phase='between';
  spectatorRender();spectatorSchedule();
 }
-document.getElementById('startSpectator').onclick=spectatorStart;
+
+document.getElementById('startSpectator').addEventListener('click',()=>{
+ const status=document.getElementById('playStatus');
+ try{
+  status.textContent='観戦を開始しています…';
+  spectatorStart();
+ }catch(err){
+  console.error('観戦開始エラー',err);
+  status.textContent='観戦開始エラー：'+(err&&err.message?err.message:String(err));
+  const board=document.getElementById('gameBoard');
+  if(board)board.innerHTML='<div class="card" style="padding:16px;color:#a22"><b>観戦開始エラー</b><pre style="white-space:pre-wrap;font-size:12px">'+String(err&&err.stack||err).replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))+'</pre></div>';
+ }
+},{passive:true});
+
 document.getElementById('pauseSpectator').onclick=()=>{
  if(!spectatorActive)return;
  spectatorPaused=!spectatorPaused;
@@ -1520,7 +1538,7 @@ renderTraining();
 <script>
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js?v=271', {updateViaCache:'none'}).catch(err => console.warn('Service Worker registration failed:', err));
+    navigator.serviceWorker.register('./sw.js?v=272', {updateViaCache:'none'}).catch(err => console.warn('Service Worker registration failed:', err));
   });
 }
 </script>
