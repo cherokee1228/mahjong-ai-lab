@@ -18,10 +18,29 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;p
 .pill{display:inline-block;background:var(--mint);color:#315c49;border-radius:20px;padding:3px 8px;font-size:11px;font-weight:700}.tile{display:inline-flex;align-items:center;justify-content:center;min-width:31px;height:38px;border:1px solid #cfd8d1;border-radius:5px;background:#fff;font-weight:700;margin:2px}.tile.red{color:#b44d43}.hidden{display:none!important}.help{font-size:12px;color:var(--muted);margin-top:6px}.row{display:flex;justify-content:space-between;align-items:center;gap:10px}.event-row{display:grid;grid-template-columns:90px 130px 110px 1fr 34px;gap:8px;align-items:center;margin-bottom:8px}.event-row input,.event-row select{padding:8px;font-size:13px}.event-row button{border:0;background:#f6e9e7;color:#963f37;border-radius:7px;height:36px;cursor:pointer}
 footer{text-align:center;color:#8a9690;font-size:11px;margin-top:25px}
 @media(max-width:760px){.intro{display:block}.notice{margin-top:12px}.span3,.span4,.span5,.span7,.span8{grid-column:span 12}.fields{grid-template-columns:repeat(2,1fr)}.event-row{grid-template-columns:1fr 1fr}.event-row input:last-of-type{grid-column:span 2}header{padding:17px 18px}}
+
+/* v2.7.4: image-based tiles and one-line horizontal hand */
+.mahjong-hand-row{
+ display:flex; flex-flow:row nowrap; align-items:flex-end; gap:4px;
+ overflow-x:auto; overflow-y:hidden; white-space:nowrap;
+ -webkit-overflow-scrolling:touch; overscroll-behavior-x:contain;
+ padding:10px 2px 12px; scrollbar-width:thin; touch-action:pan-x;
+}
+.mahjong-hand-tile{
+ flex:0 0 44px; width:44px; height:66px; min-width:44px;
+ padding:0; border:0; border-radius:6px; background:transparent;
+ box-shadow:none; line-height:0; display:block;
+}
+.mahjong-hand-tile:disabled{opacity:1}
+.mahjong-hand-tile:active:not(:disabled){transform:translateY(-5px)}
+.mahjong-face{display:block;width:100%;height:100%;filter:drop-shadow(0 1px 1px rgba(0,0,0,.12))}
+.mahjong-discard{display:inline-flex;width:31px;height:43px;vertical-align:middle;margin:2px}
+.mahjong-discard .mahjong-face{width:31px;height:43px}
+
 </style>
 </head>
 <body>
-<header><div class="brand"><div class="mark">牌</div><div><h1>Mahjong AI Lab</h1><small>SELF-LEARNING MAHJONG ENGINE</small></div></div><div class="status">WEB APP · v2.7.3</div></header>
+<header><div class="brand"><div class="mark">牌</div><div><h1>Mahjong AI Lab</h1><small>SELF-LEARNING MAHJONG ENGINE</small></div></div><div class="status">WEB APP · v2.7.4</div></header>
 <main>
 <div class="intro"><div><h2>麻雀AI研究室</h2><p>牌譜を蓄積し、局面を再現し、AI評価へつなげるための作業環境。</p></div><div class="notice">データはこのブラウザ内に保存されます</div></div>
 <nav>
@@ -211,7 +230,7 @@ footer{text-align:center;color:#8a9690;font-size:11px;margin-top:25px}
 <p class="help">計算基準：標準的な四人打ちリーチ麻雀、100点単位切り上げ、切り上げ満貫なし。役満は13翻相当として扱い、役満・ダブル役満は別枠で計算します。符・翻の正しい判定は入力者が確認してください。</p>
 </div>
 </section>
-<footer>Mahjong AI Lab · Web App 2.7.3 · データは端末内のブラウザに保存</footer>
+<footer>Mahjong AI Lab · Web App 2.7.4 · データは端末内のブラウザに保存</footer>
 </main>
 <script>
 const KEY='mahjong-ai-lab-v01';
@@ -811,6 +830,32 @@ function gIdx(t){
 }
 function gSort(a){return a.slice().sort((x,y)=>gIdx(x)-gIdx(y)||(x[0]==='0'?-1:1))}
 function gName(t){return tileLabel(t)}
+
+function gTileImage(t, compact=false){
+ const red=t[0]==='0', n=Number(red?'5':t[0]), suit=t[1];
+ const w=48,h=66;
+ const ink=red?'#c62828':(suit==='s'?'#187447':suit==='p'?'#245b9b':'#292d2b');
+ let face='';
+ if(suit==='z'){
+  const glyph={1:'東',2:'南',3:'西',4:'北',5:'白',6:'發',7:'中'}[n]||'?';
+  const color=n===5?'#d8dedb':n===6?'#16834a':n===7?'#c62828':ink;
+  face=`<text x="24" y="43" text-anchor="middle" font-size="${n===5?23:27}" font-weight="700" fill="${color}">${glyph}</text>`;
+ }else if(suit==='m'){
+  face=`<text x="24" y="31" text-anchor="middle" font-size="25" font-weight="700" fill="${ink}">${n}</text><text x="24" y="53" text-anchor="middle" font-size="16" font-weight="700" fill="${ink}">萬</text>`;
+ }else if(suit==='p'){
+  const patterns={1:[[24,34]],2:[[15,24],[33,44]],3:[[14,20],[24,34],[34,48]],4:[[15,20],[33,20],[15,47],[33,47]],5:[[15,20],[33,20],[24,34],[15,47],[33,47]],6:[[15,18],[33,18],[15,34],[33,34],[15,50],[33,50]],7:[[15,16],[33,16],[15,31],[33,31],[15,46],[33,46],[24,56]],8:[[15,15],[33,15],[15,29],[33,29],[15,43],[33,43],[15,56],[33,56]],9:[[15,15],[24,15],[33,15],[15,35],[24,35],[33,35],[15,55],[24,55],[33,55]]};
+  face=(patterns[n]||[]).map(([x,y],i)=>`<circle cx="${x}" cy="${y}" r="5.2" fill="${i%3===0?'#c43c36':ink}" stroke="#fff" stroke-width="0.8"/>`).join('');
+ }else{
+  const patterns={1:1,2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9};
+  const count=patterns[n]||1;
+  face=Array.from({length:count},(_,i)=>{
+   const x=13+(i%3)*11, y=14+Math.floor(i/3)*12;
+   return `<rect x="${x}" y="${y}" width="5" height="10" rx="2" fill="${i%2?'#b58a35':'#218052'}" transform="rotate(${i%2?18:-18} ${x+2.5} ${y+5})"/>`;
+  }).join('');
+ }
+ return `<svg class="mahjong-face" role="img" aria-label="${esc(tileLabel(t))}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="tilebg${suit}${n}${red?'r':''}" x2="0" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#f0f2ed"/></linearGradient></defs><rect x="1" y="1" width="46" height="64" rx="5" fill="url(#tilebg${suit}${n}${red?'r':''})" stroke="${red?'#d65a50':'#c8cfca'}" stroke-width="1.5"/><path d="M5 5h38" stroke="#fff" stroke-width="2" opacity=".9"/>${face}</svg>`;
+}
+
 function gDeck(){
  let d=[];for(const su of ['m','p','s'])for(let n=1;n<=9;n++)for(let k=0;k<4;k++)d.push((n===5&&k===0?'0':String(n))+su);
  for(let n=1;n<=7;n++)for(let k=0;k<4;k++)d.push(n+'z');
@@ -869,13 +914,13 @@ function gRender(){
  const b=document.getElementById('gameBoard');if(!b)return;
  const names=['東家','南家','西家','北家'];
  const scoreHTML=game.scores.map((v,i)=>`<div class="metric card" style="padding:9px"><small>${names[i]} ${i===0?'（あなた）':'（AI）'}</small><strong style="font-size:19px">${v.toLocaleString()}</strong></div>`).join('');
- const discardHTML=(arr)=>arr.map(d=>`<span class="tile ${d.tsumogiri?'tsumogiri':''}" title="${d.tsumogiri?'ツモ切り':'手出し'}" style="${d.tsumogiri?'transform:rotate(90deg);margin:7px 5px;':''}">${gName(d.tile)}</span>`).join('');
+ const discardHTML=(arr)=>arr.map(d=>`<span class="mahjong-discard ${d.tsumogiri?'tsumogiri':''}" title="${d.tsumogiri?'ツモ切り':'手出し'}" style="${d.tsumogiri?'transform:rotate(90deg);margin:7px 5px;':''}">${gTileImage(d.tile,true)}</span>`).join('');
  const opp=[1,2,3].map(i=>`<div class="card" style="padding:10px;margin:8px 0"><div class="row"><b>${names[i]}・AI</b><span>${game.hands[i].length}枚</span></div><div style="font-size:12px;margin-top:5px"><span class="muted">河：</span>${discardHTML(game.discards[i])||'—'}</div></div>`).join('');
- const hand=game.hands[0].map((t,i)=>`<button class="tile ${t[0]==='0'?'red':''}" data-gdiscard="${i}" style="height:54px;min-width:35px;font-size:16px;cursor:${game.phase==='discard'?'pointer':'default'}" ${game.phase!=='discard'?'disabled':''}>${gName(t)}</button>`).join('');
+ const hand=game.hands[0].map((t,i)=>`<button class="mahjong-hand-tile ${t[0]==='0'?'red':''}" data-gdiscard="${i}" aria-label="${esc(tileLabel(t))}を打牌" style="cursor:${game.phase==='discard'?'pointer':'default'}" ${game.phase!=='discard'?'disabled':''}>${gTileImage(t)}</button>`).join('');
  b.innerHTML=`<div class="grid" style="grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:12px">${scoreHTML}</div>
  <div class="card" style="background:#f7faf8;padding:12px"><div class="row"><b>${game.wind}${game.handNo}局 ${game.honba}本場</b><span>残り ${game.wall.length}枚</span></div><div class="muted" style="font-size:12px;margin-top:6px">ドラ表示牌：${game.dora||'—'}　供託：${game.sticks}本</div></div>
  ${opp}<div class="card" style="padding:12px;margin-top:8px"><div class="row"><b>あなたの河</b><span class="muted" style="font-size:11px">横向き＝ツモ切り／通常＝手出し</span></div><div style="margin-top:7px">${discardHTML(game.discards[0])||'—'}</div></div>
- <div class="card" style="padding:12px;margin-top:8px"><div class="row"><b>あなたの手牌（${game.hands[0].length}枚）</b><span class="muted">牌をタップして打牌</span></div><div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:10px">${hand}</div></div>
+ <div class="card" style="padding:12px;margin-top:8px"><div class="row"><b>あなたの手牌（${game.hands[0].length}枚）</b><span class="muted">牌をタップして打牌</span></div><div class="mahjong-hand-row" aria-label="手牌。横にスクロールできます">${hand}</div></div>
  <div class="card" style="padding:12px;margin-top:8px"><b>対局ログ</b><div style="max-height:130px;overflow:auto;font-size:12px;margin-top:6px">${game.log.slice(-12).reverse().map(x=>`<div>${x}</div>`).join('')}</div></div>`;
  b.querySelectorAll('[data-gdiscard]').forEach(el=>el.onclick=()=>{if(game.phase==='discard')gDiscard(0,+el.dataset.gdiscard)});
  document.getElementById('playStatus').textContent=game.phase==='discard'?'あなたの打牌':game.phase==='ended'?'和了':game.phase==='exhausted'?'流局':'進行中';

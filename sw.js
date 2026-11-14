@@ -1,4 +1,4 @@
-const CACHE_NAME='mahjong-ai-lab-v2-7-3';
+const CACHE_NAME='mahjong-ai-lab-v2-7-4';
 const APP_FILES=['./','./index.html','./manifest.webmanifest'];
 self.addEventListener('install',e=>e.waitUntil((async()=>{const c=await caches.open(CACHE_NAME);await c.addAll(APP_FILES);await self.skipWaiting()})()));
 self.addEventListener('activate',e=>e.waitUntil((async()=>{const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('mahjong-ai-lab-')&&k!==CACHE_NAME).map(k=>caches.delete(k)));await self.clients.claim()})()));
