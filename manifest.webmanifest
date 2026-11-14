@@ -1,0 +1,11 @@
+{
+  "name": "Mahjong AI Lab",
+  "short_name": "Mahjong AI",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f3f5f2",
+  "theme_color": "#1d3933",
+  "description": "麻雀AIの対局観戦・点数照合・牌譜管理"
+}

@@ -1,0 +1,1528 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#1d3933"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Mahjong AI Lab"><link rel="manifest" href="./manifest.webmanifest">
+<title>Mahjong AI Lab</title>
+<style>
+:root{--bg:#f3f5f2;--panel:#fff;--ink:#20302d;--muted:#71807b;--line:#e1e8e3;--green:#234b40;--mint:#dcece4;--gold:#b88a45;--red:#a34e45}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{background:#1d3933;color:#fff;padding:22px max(20px,calc((100vw - 1120px)/2));display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{display:flex;gap:12px;align-items:center}.mark{width:42px;height:42px;border:1px solid #739188;border-radius:12px;display:grid;place-items:center;font-size:23px;color:#cce3d7}
+h1{font-size:21px;margin:0;letter-spacing:.02em}header small{color:#b9ccc5;display:block;font-size:11px;letter-spacing:.12em}
+.status{font-size:12px;color:#d8e9e1;border:1px solid #58746b;padding:5px 10px;border-radius:20px}
+main{max-width:1120px;margin:26px auto;padding:0 18px 50px}.intro{display:flex;justify-content:space-between;gap:20px;align-items:end;margin-bottom:22px}.intro h2{font-size:26px;margin:0 0 5px}.intro p{color:var(--muted);margin:0}.notice{font-size:12px;color:#6b7772;background:#e9efeb;padding:9px 12px;border-radius:9px}
+nav{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 18px}.tab{border:1px solid var(--line);background:#fff;color:#4f625b;padding:10px 15px;border-radius:9px;cursor:pointer;font-weight:600}.tab.active{background:var(--green);color:white;border-color:var(--green)}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:15px}.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:0 3px 14px #243c3010}.span3{grid-column:span 3}.span4{grid-column:span 4}.span5{grid-column:span 5}.span7{grid-column:span 7}.span8{grid-column:span 8}.span12{grid-column:span 12}
+.metric small{color:var(--muted)}.metric strong{display:block;font-size:27px;margin-top:5px}.section-title{font-size:16px;margin:0 0 14px}.muted{color:var(--muted)}label{display:block;font-size:12px;color:#586b63;font-weight:650;margin:0 0 5px}input,select,textarea{width:100%;border:1px solid #d8e1db;border-radius:8px;padding:10px 11px;font:inherit;background:#fff;color:var(--ink)}input:focus,select:focus,textarea:focus{outline:2px solid #b7d5c5;border-color:#6c9b83}textarea{min-height:94px;resize:vertical}.fields{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.field{min-width:0}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px}.btn{border:0;border-radius:9px;padding:10px 15px;font-weight:700;cursor:pointer;background:var(--green);color:white}.btn.secondary{background:#e8efeb;color:#365449}.btn.danger{background:#f6e9e7;color:#963f37}.btn:disabled{opacity:.45;cursor:not-allowed}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-weight:650}tr:last-child td{border-bottom:0}.empty{padding:28px;text-align:center;color:var(--muted);background:#f8faf8;border-radius:10px}
+.pill{display:inline-block;background:var(--mint);color:#315c49;border-radius:20px;padding:3px 8px;font-size:11px;font-weight:700}.tile{display:inline-flex;align-items:center;justify-content:center;min-width:31px;height:38px;border:1px solid #cfd8d1;border-radius:5px;background:#fff;font-weight:700;margin:2px}.tile.red{color:#b44d43}.hidden{display:none!important}.help{font-size:12px;color:var(--muted);margin-top:6px}.row{display:flex;justify-content:space-between;align-items:center;gap:10px}.event-row{display:grid;grid-template-columns:90px 130px 110px 1fr 34px;gap:8px;align-items:center;margin-bottom:8px}.event-row input,.event-row select{padding:8px;font-size:13px}.event-row button{border:0;background:#f6e9e7;color:#963f37;border-radius:7px;height:36px;cursor:pointer}
+footer{text-align:center;color:#8a9690;font-size:11px;margin-top:25px}
+@media(max-width:760px){.intro{display:block}.notice{margin-top:12px}.span3,.span4,.span5,.span7,.span8{grid-column:span 12}.fields{grid-template-columns:repeat(2,1fr)}.event-row{grid-template-columns:1fr 1fr}.event-row input:last-of-type{grid-column:span 2}header{padding:17px 18px}}
+</style>
+</head>
+<body>
+<header><div class="brand"><div class="mark">牌</div><div><h1>Mahjong AI Lab</h1><small>SELF-LEARNING MAHJONG ENGINE</small></div></div><div class="status">LOCAL PROTOTYPE · v2.5</div></header>
+<main>
+<div class="intro"><div><h2>麻雀AI研究室</h2><p>牌譜を蓄積し、局面を再現し、AI評価へつなげるための作業環境。</p></div><div class="notice">データはこのブラウザ内に保存されます</div></div>
+<nav>
+<button class="tab active" data-tab="home">ダッシュボード</button><button class="tab" data-tab="play">対局</button><button class="tab" data-tab="training">AI自己学習</button><button class="tab" data-tab="new">対局を登録</button><button class="tab" data-tab="records">牌譜一覧</button><button class="tab" data-tab="analysis">局面・打牌データ</button><button class="tab" data-tab="board">牌姿再現</button><button class="tab" data-tab="score">点数計算</button><button class="tab" data-tab="auto">和了自動判定</button><button class="tab" data-tab="tests">点数照合テスト</button>
+</nav>
+<section id="home">
+<div class="grid">
+<div class="card metric span3"><small>登録対局数</small><strong id="mGames">0</strong><span class="muted">games</span></div>
+<div class="card metric span3"><small>登録局数</small><strong id="mRounds">0</strong><span class="muted">rounds</span></div>
+<div class="card metric span3"><small>記録イベント数</small><strong id="mEvents">0</strong><span class="muted">actions</span></div>
+<div class="card metric span3"><small>AI評価</small><strong>未接続</strong><span class="muted">engine pending</span></div>
+<div class="card span7"><h3 class="section-title">最近の対局</h3><div id="recent"></div></div>
+<div class="card span5"><h3 class="section-title">開発ステータス</h3>
+<table><tr><td>独自牌譜入力</td><td><span class="pill">利用可能</span></td></tr><tr><td>ローカル保存</td><td><span class="pill">利用可能</span></td></tr><tr><td>局面イベント記録</td><td><span class="pill">利用可能</span></td></tr><tr><td>牌姿・合法手判定</td><td><span class="pill" style="background:#f5eee0;color:#8b672e">次段階</span></td></tr><tr><td>AI打牌評価・学習</td><td><span class="pill" style="background:#f5eee0;color:#8b672e">未実装</span></td></tr></table>
+<p class="help">現時点ではAIの推奨打牌や期待値を生成しません。入力データを整備する段階です。</p></div>
+</div></section>
+
+<section id="play" class="hidden">
+ <div class="card">
+  <div class="row"><div><h3 class="section-title">四人打ち・東南戦</h3><p class="muted">あなた1人＋AI3人／赤5各1枚／25,000点持ち</p></div><span class="pill" id="playStatus">対局前</span></div>
+  <div class="actions"><button class="btn" id="startGame">新規対局（自分＋AI）</button><button class="btn" id="startSpectator">AI4人の対局を観戦</button><button class="btn secondary" id="sortHand">手牌を整列</button><button class="btn secondary" id="autoDiscard" disabled>ツモ切り</button></div>
+  <div class="fields" style="margin-top:14px">
+   <div><label>観戦速度</label><select id="spectatorSpeed"><option value="1400">ゆっくり</option><option value="750" selected>標準</option><option value="250">速い</option><option value="80">高速</option></select></div>
+   <div><label>順位ウマ</label><select id="umaSetting"><option value="10-30" selected>10-30</option></select></div>
+   <div style="display:flex;align-items:end;gap:7px"><button class="btn secondary" id="pauseSpectator" disabled>一時停止</button><button class="btn secondary" id="stepSpectator" disabled>1手進める</button></div>
+  </div>
+  <div id="gameBoard" style="margin-top:16px">
+   <div class="empty">「新規対局」を押すと配牌を開始します。</div>
+  </div>
+  <div id="gameMessage" class="help" style="margin-top:12px">初期版は配牌・ツモ・打牌・AI3人の進行を実装。鳴き・リーチ・本格的なAI押し引きは次段階で追加します。</div>
+ </div>
+</section>
+
+<section id="training" class="hidden"><div class="card">
+ <h3 class="section-title">AI自己対局・学習</h3>
+ <p class="muted">AI4人で対局を繰り返し、各AIの打牌方針（牌姿評価の重み）を対局結果に応じて少しずつ調整します。学習データはこのブラウザに保存されます。</p>
+ <div class="fields">
+  <div><label>学習対局数</label><select id="trainGames"><option value="10">10局</option><option value="50" selected>50局</option><option value="100">100局</option><option value="300">300局</option></select></div>
+  <div><label>学習率</label><select id="trainRate"><option value="0.005">低（安定）</option><option value="0.015" selected>標準</option><option value="0.03">高（変化大）</option></select></div>
+  <div><label>累計学習対局</label><strong id="trainedGames" style="display:block;font-size:22px">0</strong></div>
+  <div><label>学習モデル</label><strong id="modelVersion" style="display:block;font-size:22px">初期状態</strong></div>
+ </div>
+ <div class="actions"><button class="btn" id="runTraining">AI同士で学習開始</button><button class="btn secondary" id="resetTraining">学習結果をリセット</button></div>
+ <div id="trainingStatus" class="help" style="margin-top:12px">未学習です。まず50対局程度から試してください。</div>
+ <div id="trainingSummary" style="margin-top:14px"></div>
+ <div id="trainingWeights" style="margin-top:14px"></div>
+ <p class="help">現在は簡易ルールベースAIによる自己対局と、勝敗に基づく特徴量の重み調整です。深層強化学習や人間レベルの麻雀AIではありません。現段階の対局シミュレーターは鳴き・リーチ・ロン・点数精算を省略した試験環境です。</p>
+</div></section>
+<section id="new" class="hidden">
+<div class="card">
+<h3 class="section-title">対局情報</h3>
+<div class="fields">
+<div class="field"><label>対局日</label><input id="date" type="date"></div>
+<div class="field"><label>対局形式</label><select id="format"><option>東南戦</option><option>東風戦</option></select></div>
+<div class="field"><label>ルール</label><select id="rule"><option>四人打ち・赤あり</option><option>四人打ち・赤なし</option><option>カスタム</option></select></div>
+<div class="field"><label>対局メモ</label><input id="memo" placeholder="例：練習・大会など"></div>
+</div>
+<div style="height:20px"></div><div class="row"><h3 class="section-title" style="margin:0">局データ</h3><button class="btn secondary" id="addRound">＋ 局を追加</button></div>
+<div id="rounds"></div>
+<div class="actions"><button class="btn" id="saveGame">対局を保存</button><button class="btn secondary" id="clearForm">入力をクリア</button></div>
+<p class="help">各局に打牌・ツモ・鳴き・リーチ等を時系列で記録できます。まずは分かる範囲だけ入力して保存できます。</p>
+</div></section>
+<section id="records" class="hidden">
+<div class="card"><div class="row"><h3 class="section-title">保存済み牌譜</h3><button class="btn secondary" id="exportAll">JSONを書き出す</button></div><div id="recordTable"></div></div>
+</section>
+<section id="analysis" class="hidden">
+<div class="card"><h3 class="section-title">局面・打牌データ</h3><p class="muted">保存した局を選択すると、イベント履歴を時系列で確認できます。次の開発段階ではここに手牌・河・副露の再現表示とAI評価を接続します。</p>
+<div class="field" style="max-width:420px"><label>対象の局</label><select id="roundSelect"><option value="">局を選択</option></select></div><div id="roundDetail" style="margin-top:15px"></div></div>
+</section>
+<section id="board" class="hidden">
+<div class="card">
+<h3 class="section-title">牌姿エディター</h3>
+<p class="muted">牌を文字入力すると、4人の手牌・河・副露・ドラを卓上に再現します。局面は選択した牌譜の局に保存できます。</p>
+<div class="fields" style="margin-bottom:15px">
+<div style="grid-column:span 2"><label>保存先の対局・局</label><select id="boardRound"><option value="">保存先を選択</option></select></div>
+<div><label>手番</label><select id="boardTurn"><option>東</option><option>南</option><option>西</option><option>北</option><option>なし</option></select></div>
+<div><label>局面</label><select id="boardPhase"><option>通常</option><option>リーチ後</option><option>鳴き直後</option><option>テンパイ</option><option>流局直前</option></select></div>
+</div>
+<div class="fields">
+<div><label>東家 手牌</label><input id="handE" placeholder="例: 123m 456p 789s 11z"></div>
+<div><label>南家 手牌</label><input id="handS" placeholder="例: 234m 567p 88s 123z"></div>
+<div><label>西家 手牌</label><input id="handW" placeholder="例: 345m 678p 99s 45z"></div>
+<div><label>北家 手牌</label><input id="handN" placeholder="例: 456m 789p 11s 67z"></div>
+<div><label>東家 河</label><input id="riverE" placeholder="例: 1m 9p 2s"></div>
+<div><label>南家 河</label><input id="riverS" placeholder="例: 2m 8p 3s"></div>
+<div><label>西家 河</label><input id="riverW" placeholder="例: 3m 7p 4s"></div>
+<div><label>北家 河</label><input id="riverN" placeholder="例: 4m 6p 5s"></div>
+<div><label>東家 副露</label><input id="meldE" placeholder="例: 3m 4m 5m; 7p 8p 9p"></div>
+<div><label>南家 副露</label><input id="meldS" placeholder="例: 2s 2s 2s"></div>
+<div><label>西家 副露</label><input id="meldW" placeholder="例: 5z 5z 5z"></div>
+<div><label>北家 副露</label><input id="meldN" placeholder="例: 1p 1p 1p"></div>
+<div><label>ドラ表示牌</label><input id="doraTiles" placeholder="例: 4m"></div>
+<div><label>供託・本場</label><input id="boardNote" placeholder="例: 1本場・供託1"></div>
+</div>
+<div class="card" style="margin-top:15px;background:#f8faf8">
+<h3 class="section-title">副露操作</h3>
+<div class="fields">
+<div><label>副露する家</label><select id="meldCaller"><option>東</option><option>南</option><option>西</option><option>北</option></select></div>
+<div><label>副露の種類</label><select id="meldType"><option value="チー">チー</option><option value="ポン">ポン</option><option value="大明槓">大明槓</option><option value="暗槓">暗槓</option></select></div>
+<div style="grid-column:span 2"><label>自分の手牌から使う牌</label><input id="meldOwnTiles" placeholder="例: 3m 4m"></div>
+<div><label>相手の捨て牌</label><input id="meldCalledTile" placeholder="例: 5m"></div>
+<div><label>捨てた相手</label><select id="meldSource"><option>東</option><option>南</option><option>西</option><option>北</option></select></div>
+<div style="grid-column:span 2;display:flex;align-items:end"><button class="btn" id="applyMeld" style="width:100%">副露を確定</button></div>
+</div>
+<p class="help">チーは手牌2枚＋相手の捨て牌1枚、ポンは2枚＋1枚、大明槓は3枚＋1枚、暗槓は手牌4枚です。入力した手牌は手牌欄から取り除き、副露欄に移します。</p>
+<div id="meldMessage" class="help"></div>
+</div>
+<div class="card" style="margin-top:15px;background:#f8faf8">
+<h3 class="section-title">クリック操作</h3>
+<div class="fields">
+<div style="grid-column:span 2"><label>ツモ牌（例: 5m）</label><input id="drawTile" placeholder="例: 5m"></div>
+<div style="grid-column:span 2;display:flex;align-items:end"><button class="btn" id="addDraw" style="width:100%">選択中の家にツモ</button></div>
+</div>
+<p class="help">卓上の手牌をクリックすると、その牌を河へ移動します。現在の手番の家だけ操作できます。ツモ牌を追加してから打牌してください。</p>
+<div id="actionLog" class="help">操作履歴はここに表示されます。</div>
+</div>
+<div class="actions"><button class="btn" id="renderBoard">牌姿を再現</button><button class="btn secondary" id="saveBoard">選択した局に保存</button><button class="btn secondary" id="undoBoard">ひとつ戻す</button><button class="btn secondary" id="clearBoard">クリア</button></div>
+<div id="tileErrors" class="help" role="status"></div>
+</div>
+<div class="card" style="margin-top:15px">
+<div class="row"><h3 class="section-title" style="margin:0">卓上表示</h3><span class="pill" id="boardStatus">未再現</span></div>
+<div id="mahjongTable" style="margin-top:14px">
+<div class="empty">牌姿を入力して「牌姿を再現」を押してください。</div>
+</div>
+</div>
+<div class="card" style="margin-top:15px">
+<h3 class="section-title">入力ルール</h3>
+<p class="muted" style="font-size:13px">萬子=m、筒子=p、索子=s、字牌=z。例：<b>123m 456p 789s 123z</b>。1〜7zは東・南・西・北・白・發・中です。赤牌は <b>0m / 0p / 0s</b> で入力し、各1枚につきドラ1翻として自動加算します（一般的なフリー雀荘の「各色5に赤1枚」想定）。副露は1組ごとにセミコロンで区切ります。</p>
+</div>
+</section>
+
+<section id="auto" class="hidden"><div class="card">
+<h3 class="section-title">和了形自動判定</h3>
+<p class="muted">和了牌を含む手牌だけを入力し、副露は別欄へ。例：副露なしなら14枚。副露1組なら手牌11枚＋副露3枚組。副露はセミコロン区切り。槓子は4枚で入力。</p>
+<div class="fields">
+<div style="grid-column:span 2"><label>手牌（和了牌を含む）</label><input id="aHand" placeholder="123m 456m 789p 55s 6s"></div>
+<div><label>副露</label><input id="aMeld" placeholder="3m 4m 5m; 7p 7p 7p"></div>
+<div><label>和了牌</label><input id="aWin" placeholder="6s"></div>
+<div><label>方法</label><select id="aMethod"><option value="ron">ロン</option><option value="tsumo">ツモ</option></select></div>
+<div><label>親子</label><select id="aDealer"><option value="child">子</option><option value="dealer">親</option></select></div>
+<div><label>場風</label><select id="aRound"><option>1z</option><option>2z</option><option>3z</option><option>4z</option></select></div>
+<div><label>自風</label><select id="aSeat"><option>1z</option><option>2z</option><option>3z</option><option>4z</option></select></div>
+<div><label>ドラ表示牌</label><input id="aDora" placeholder="4m"></div>
+<div><label>裏ドラ表示牌</label><input id="aUra" placeholder="リーチ時のみ"></div>
+<div><label>本場</label><input id="aHonba" type="number" min="0" value="0"></div>
+<div><label>供託（本）</label><input id="aSticks" type="number" min="0" value="0"></div>
+<div><label>責任払い（パオ）</label><select id="aPao"><option value="">なし</option><option value="daisangen">大三元のパオ</option><option value="daisuushi">大四喜のパオ</option><option value="both">大三元・大四喜の両方</option></select></div>
+<div><label>責任者（放銃者ではない場合）</label><select id="aPaoSeat"><option>東家</option><option>南家</option><option>西家</option><option>北家</option></select></div>
+</div>
+<div class="fields" style="margin-top:12px">
+<label><input type="checkbox" id="aRiichi" style="width:auto"> リーチ</label>
+<label><input type="checkbox" id="aIppatsu" style="width:auto"> 一発</label>
+<label><input type="checkbox" id="aRinshan" style="width:auto"> 嶺上開花</label>
+<label><input type="checkbox" id="aChankan" style="width:auto"> 槍槓</label>
+<label><input type="checkbox" id="aHaitei" style="width:auto"> 海底/河底</label>
+<label><input type="checkbox" id="aDouble" style="width:auto"> ダブルリーチ</label>
+</div>
+<div class="actions"><button class="btn" id="aJudge">役・翻・符・点数を判定</button></div>
+<div id="aResult" style="margin-top:16px"><div class="empty">和了形を入力してください。</div></div>
+<p class="help">v1.8：一般的なフリー雀荘ルールを基本想定し、赤牌を各1翻のドラとして扱う設定に加え、1人＋AI3人の対局モード（配牌・ツモ・打牌・簡易AI）を追加しました。赤牌の採用枚数は店舗ごとに異なります。</p>
+</div></section>
+
+<section id="tests" class="hidden"><div class="card">
+<h3 class="section-title">和了例・点数照合テスト</h3>
+<p class="muted">既知の和了例を自動判定に投入し、期待点数とアプリの計算結果を比較します。テスト実行時は「和了自動判定」の入力欄を一時的に書き換えます。終了後はテスト結果を一覧表示します。</p>
+<div class="actions"><button class="btn" id="runScoreTests">全テスト実行（点数＋局面管理）</button><button class="btn secondary" id="runEngineTests">鳴き・リーチ・副露手テスト</button><button class="btn secondary" id="runExceptionTests">例外処理テスト</button><button class="btn secondary" id="runKanTests">槍槓・嶺上開花・リーチ槓テスト</button></div>
+<div id="engineTestSummary" style="margin:10px 0"></div><div id="engineTestResults"></div>
+<div id="scoreTestSummary" style="margin:14px 0"></div>
+<div id="scoreTestResults" class="empty">まだテストを実行していません。</div>
+<p class="help">赤牌0m/0p/0sは各1枚をドラ1翻として扱います。一般的なフリー雀荘の「各色赤5を1枚」設定を基本想定とします。テストは代表的な和了例による照合です。これは実装の自己照合であり、公式審判基準による認証ではありません。</p>
+</div></section>
+\n<section id="score" class="hidden">
+<div class="card">
+<h3 class="section-title">和了点数計算</h3>
+<p class="muted">翻数・符数・親子・ロン／ツモから、標準的なリーチ麻雀の支払いを計算します。役の成立や符の内訳は現時点では手入力です。</p>
+<div class="fields">
+<div><label>和了者</label><select id="scoreWinner"><option value="child">子</option><option value="dealer">親</option></select></div>
+<div><label>和了方法</label><select id="scoreMethod"><option value="ron">ロン</option><option value="tsumo">ツモ</option></select></div>
+<div><label>翻数</label><select id="scoreHan"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option><option>13</option><option value="役満">役満</option><option value="ダブル役満">ダブル役満</option></select></div>
+<div><label>符数</label><select id="scoreFu"><option>20</option><option>25</option><option selected>30</option><option>40</option><option>50</option><option>60</option><option>70</option><option>80</option><option>90</option><option>100</option><option>110</option></select></div>
+<div><label>本場</label><input id="scoreHonba" type="number" min="0" value="0"></div>
+<div><label>供託（本）</label><input id="scoreSticks" type="number" min="0" value="0"></div>
+<div><label>ツモ時の支払い方法</label><select id="scoreTsumo"><option value="standard">通常</option></select></div>
+</div>
+<div class="actions"><button class="btn" id="calcScore">点数を計算</button></div>
+<div id="scoreResult" style="margin-top:16px"><div class="empty">翻数・符数などを選択して計算してください。</div></div>
+<p class="help">計算基準：標準的な四人打ちリーチ麻雀、100点単位切り上げ、切り上げ満貫なし。役満は13翻相当として扱い、役満・ダブル役満は別枠で計算します。符・翻の正しい判定は入力者が確認してください。</p>
+</div>
+</section>
+<footer>Mahjong AI Lab · Prototype 1.5 · データは端末内のブラウザに保存</footer>
+</main>
+<script>
+const KEY='mahjong-ai-lab-v01';
+let games=JSON.parse(localStorage.getItem(KEY)||'[]'), draftRounds=[];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function persist(){localStorage.setItem(KEY,JSON.stringify(games));render()}
+function tab(name){document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));['home','play','training','new','records','analysis','board','score','auto','tests'].forEach(x=>$(x).classList.toggle('hidden',x!==name));if(name==='analysis')fillRoundSelect();if(name==='board')fillBoardRoundSelect()}
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
+function newRound(){return {wind:'東',number:1,honba:0,dealer:'東',scores:'25000 / 25000 / 25000 / 25000',result:'未入力',note:'',events:[]}}
+function addRound(data=newRound()){draftRounds.push(data);renderDraft()}
+function renderDraft(){
+$('rounds').innerHTML=draftRounds.map((r,i)=>`<div class="card" style="margin-top:13px;padding:14px" data-round="${i}">
+<div class="row"><strong>${i+1}局目</strong><button class="btn danger remove-round" data-i="${i}">局を削除</button></div>
+<div class="fields" style="margin-top:12px">
+<div><label>場風</label><select class="wind"><option ${r.wind==='東'?'selected':''}>東</option><option ${r.wind==='南'?'selected':''}>南</option><option ${r.wind==='西'?'selected':''}>西</option><option ${r.wind==='北'?'selected':''}>北</option></select></div>
+<div><label>局数</label><input class="number" type="number" min="1" max="4" value="${r.number}"></div>
+<div><label>本場</label><input class="honba" type="number" min="0" value="${r.honba}"></div>
+<div><label>親</label><select class="dealer">${['東','南','西','北'].map(p=>`<option ${r.dealer===p?'selected':''}>${p}</option>`).join('')}</select></div>
+<div style="grid-column:span 2"><label>開始時点の持ち点（東 / 南 / 西 / 北）</label><input class="scores" value="${esc(r.scores)}"></div>
+<div style="grid-column:span 2"><label>局の結果</label><select class="result">${['未入力','東家和了','南家和了','西家和了','北家和了','流局','途中流局'].map(x=>`<option ${r.result===x?'selected':''}>${x}</option>`).join('')}</select></div>
+<div style="grid-column:span 4"><label>局メモ</label><input class="note" value="${esc(r.note)}" placeholder="例：東家リーチ、南家が押し返し"></div>
+</div>
+<div class="row" style="margin:16px 0 9px"><strong style="font-size:13px">イベント履歴</strong><button class="btn secondary add-event" data-i="${i}">＋ イベント</button></div>
+<div class="events">${r.events.map((e,j)=>eventHTML(i,j,e)).join('')}</div>
+</div>`).join('');
+$('rounds').querySelectorAll('.remove-round').forEach(b=>b.onclick=()=>{draftRounds.splice(+b.dataset.i,1);renderDraft()});
+$('rounds').querySelectorAll('.add-event').forEach(b=>{b.onclick=()=>{draftRounds[+b.dataset.i].events.push({player:'東',type:'打牌',tile:'',detail:''});renderDraft()}});
+$('rounds').querySelectorAll('.remove-event').forEach(b=>b.onclick=()=>{draftRounds[+b.dataset.i].events.splice(+b.dataset.j,1);renderDraft()});
+}
+function eventHTML(i,j,e){return `<div class="event-row"><select class="ev-player" aria-label="プレイヤー">${['東','南','西','北'].map(p=>`<option ${e.player===p?'selected':''}>${p}</option>`).join('')}</select><select class="ev-type">${['ツモ','打牌','チー','ポン','大明槓','加槓','暗槓','リーチ','和了','放銃','流局'].map(p=>`<option ${e.type===p?'selected':''}>${p}</option>`).join('')}</select><input class="ev-tile" placeholder="牌（例: 5m）" value="${esc(e.tile)}"><input class="ev-detail" placeholder="補足（例: ツモ切り、リーチ宣言）" value="${esc(e.detail)}"><button class="remove-event" data-i="${i}" data-j="${j}" title="削除">×</button></div>`}
+function collectDraft(){
+document.querySelectorAll('[data-round]').forEach(el=>{let i=+el.dataset.round,r=draftRounds[i];r.wind=el.querySelector('.wind').value;r.number=+el.querySelector('.number').value;r.honba=+el.querySelector('.honba').value;r.dealer=el.querySelector('.dealer').value;r.scores=el.querySelector('.scores').value;r.result=el.querySelector('.result').value;r.note=el.querySelector('.note').value;r.events=[...el.querySelectorAll('.event-row')].map(e=>({player:e.querySelector('.ev-player').value,type:e.querySelector('.ev-type').value,tile:e.querySelector('.ev-tile').value,detail:e.querySelector('.ev-detail').value}))})
+}
+$('addRound').onclick=()=>{collectDraft();addRound()};
+$('clearForm').onclick=()=>{if(confirm('入力中の内容を消去しますか？')){draftRounds=[];addRound()}};
+$('saveGame').onclick=()=>{collectDraft();if(!draftRounds.length){alert('局データを1つ以上追加してください');return}
+const game={id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),date:$('date').value||new Date().toISOString().slice(0,10),format:$('format').value,rule:$('rule').value,memo:$('memo').value,rounds:JSON.parse(JSON.stringify(draftRounds)),createdAt:new Date().toISOString()};
+games.unshift(game);persist();draftRounds=[];addRound();$('memo').value='';tab('records');alert('対局を保存しました')};
+function render(){
+$('mGames').textContent=games.length;$('mRounds').textContent=games.reduce((a,g)=>a+g.rounds.length,0);$('mEvents').textContent=games.reduce((a,g)=>a+g.rounds.reduce((b,r)=>b+r.events.length,0),0);
+$('recent').innerHTML=games.length?`<table><thead><tr><th>日付</th><th>形式</th><th>局数</th><th>メモ</th></tr></thead><tbody>${games.slice(0,5).map(g=>`<tr><td>${esc(g.date)}</td><td>${esc(g.format)}</td><td>${g.rounds.length}</td><td>${esc(g.memo||'—')}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">まだ対局データがありません。<br>「対局を登録」から最初の牌譜を作成してください。</div>';
+$('recordTable').innerHTML=games.length?`<table><thead><tr><th>日付</th><th>形式</th><th>ルール</th><th>局数</th><th>イベント</th><th></th></tr></thead><tbody>${games.map(g=>`<tr><td>${esc(g.date)}</td><td>${esc(g.format)}</td><td>${esc(g.rule)}</td><td>${g.rounds.length}</td><td>${g.rounds.reduce((a,r)=>a+r.events.length,0)}</td><td><button class="btn secondary view-game" data-id="${g.id}">詳細</button> <button class="btn danger delete-game" data-id="${g.id}">削除</button></td></tr>`).join('')}</tbody></table>`:'<div class="empty">保存済みの牌譜はありません。</div>';
+document.querySelectorAll('.delete-game').forEach(b=>b.onclick=()=>{if(confirm('この対局を削除しますか？')){games=games.filter(g=>g.id!==b.dataset.id);persist()}});
+document.querySelectorAll('.view-game').forEach(b=>b.onclick=()=>{tab('analysis');fillRoundSelect(b.dataset.id)});
+}
+function fillRoundSelect(gameId){let opts=[];games.forEach(g=>g.rounds.forEach((r,i)=>opts.push({v:g.id+'|'+i,t:`${g.date} · ${r.wind}${r.number}局 ${r.honba}本場 · ${g.format}`})));$('roundSelect').innerHTML='<option value="">局を選択</option>'+opts.map(o=>`<option value="${o.v}">${esc(o.t)}</option>`).join('');if(gameId){let g=games.find(x=>x.id===gameId);if(g&&g.rounds.length)$('roundSelect').value=gameId+'|0';showRound()}}
+$('roundSelect').onchange=showRound;
+function showRound(){let v=$('roundSelect').value;if(!v){$('roundDetail').innerHTML='';return}let [id,ix]=v.split('|'),g=games.find(x=>x.id===id),r=g.rounds[+ix];$('roundDetail').innerHTML=`<div class="card" style="background:#f8faf8"><div class="row"><strong>${esc(r.wind)}${r.number}局 ${r.honba}本場</strong><span class="pill">${esc(r.result)}</span></div><p class="muted" style="font-size:13px">親：${esc(r.dealer)} · 開始持ち点：${esc(r.scores)}</p><p>${esc(r.note||'局メモなし')}</p><h4 style="font-size:13px">イベント時系列</h4>${r.events.length?`<table><thead><tr><th>順</th><th>家</th><th>操作</th><th>牌</th><th>補足</th></tr></thead><tbody>${r.events.map((e,i)=>`<tr><td>${i+1}</td><td>${esc(e.player)}</td><td>${esc(e.type)}</td><td>${esc(e.tile||'—')}</td><td>${esc(e.detail||'—')}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">イベント未登録</div>'}<p class="help">この局のAI評価欄：未接続。牌姿と局面情報の構造化後に評価エンジンを接続します。</p></div>`}
+$('exportAll').onclick=()=>{let blob=new Blob([JSON.stringify({schemaVersion:'0.1',app:'Mahjong AI Lab',games},null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='mahjong-ai-lab-records.json';a.click();URL.revokeObjectURL(a.href)};
+
+const tileNames={'1z':'東','2z':'南','3z':'西','4z':'北','5z':'白','6z':'發','7z':'中'};
+function parseTiles(raw){
+ const text=String(raw||'').replace(/[、,]/g,' ').trim(); if(!text)return [];
+ const out=[]; const tokens=text.split(/\s+/);
+ for(const token of tokens){
+   const m=token.match(/^([0-9]+)([mpsz])$/i);
+   if(m){for(const n of m[1])out.push(n+m[2].toLowerCase());continue;}
+   const single=token.match(/^([0-9])(m|p|s|z)$/i);
+   if(single){out.push(single[1]+single[2].toLowerCase());continue;}
+   throw new Error('牌の書式を確認してください: '+token);
+ }
+ for(const t of out){const n=+t[0],suit=t[1];if(suit==='z'?(n<1||n>7):(n<0||n>9||n===0&&suit==='z'||n===9&&suit==='z'))throw new Error('存在しない牌です: '+t);if(n===0&&suit==='z')throw new Error('字牌に赤牌はありません');}
+ return out;
+}
+function tileLabel(t){if(t[0]==='0')return '赤5'+({'m':'萬','p':'筒','s':'索'}[t[1]]);if(t[1]==='z')return tileNames[t]||t;return t[0]+({'m':'萬','p':'筒','s':'索'}[t[1]]);}
+function tileHTML(t){let red=t[0]==='0';return `<span class="tile ${red?'red':''}" title="${esc(t)}">${esc(tileLabel(t))}</span>`}
+function parseMelds(raw){return String(raw||'').split(';').map(x=>x.trim()).filter(Boolean).map(parseTiles)}
+function readBoard(){
+ const seats=[['東','E'],['南','S'],['西','W'],['北','N']];
+ const data={turn:$('boardTurn').value,phase:$('boardPhase').value,note:$('boardNote').value,dora:parseTiles($('doraTiles').value),players:{}};
+ seats.forEach(([name,k])=>{data.players[name]={hand:parseTiles($('hand'+k).value),river:parseTiles($('river'+k).value),melds:parseMelds($('meld'+k).value)}});
+ return data;
+}
+function validateBoard(b){
+ const counts={},issues=[];
+ const add=(t,where)=>{let key=t[0]==='0'?'5'+t[1]:t;counts[key]=(counts[key]||0)+1;if(counts[key]>4)issues.push(`${tileLabel(t)}が5枚以上あります（${where}）`);};
+ Object.entries(b.players).forEach(([p,v])=>{v.hand.forEach(t=>add(t,p+'手牌'));v.river.forEach(t=>add(t,p+'河'));v.melds.flat().forEach(t=>add(t,p+'副露'))});
+ b.dora.forEach(t=>add(t,'ドラ表示牌'));
+ return [...new Set(issues)];
+}
+let boardUndo=[];
+let currentBoard=null;
+let boardActions=[];
+function snapshotBoard(){if(currentBoard)boardUndo.push(JSON.stringify(currentBoard));if(boardUndo.length>30)boardUndo.shift()}
+function drawBoard(b){
+ currentBoard=b;
+ const hand=(p)=>b.players[p].hand.map((t,i)=>`<button type="button" class="tile hand-tile ${t[0]==='0'?'red':''}" data-player="${p}" data-index="${i}" title="${esc(tileLabel(t))}" style="cursor:pointer">${esc(tileLabel(t))}</button>`).join('')||'<span class="muted">未入力</span>';
+ const river=(p)=>b.players[p].river.map(tileHTML).join('')||'<span class="muted">河なし</span>';
+ const meld=(p)=>b.players[p].melds.map(g=>`<span style="white-space:nowrap;margin-right:8px">${g.map(tileHTML).join('')}</span>`).join('')||'<span class="muted">副露なし</span>';
+ const panel=(p,cls)=>`<div class="seat ${cls}"><div class="row"><b>${p}家</b><span class="muted" style="font-size:11px">${b.turn===p?'▶ 手番・クリックで打牌':''}</span></div><div class="tileline">${hand(p)}</div><div class="sub">副露：${meld(p)}</div><div class="sub">河：${river(p)}</div></div>`;
+ $('mahjongTable').innerHTML=`<style>
+ .tablefelt{background:#e4eee5;border:8px solid #b5c7b9;border-radius:18px;padding:15px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+ .seat{background:#f8fbf8;border:1px solid #d0ded3;border-radius:11px;padding:10px;min-width:0}
+ .tileline{display:flex;flex-wrap:wrap;margin:8px 0;min-height:40px}.sub{font-size:12px;margin-top:7px;line-height:1.9;overflow-wrap:anywhere}
+ .centerinfo{grid-column:1/-1;text-align:center;padding:8px;color:#365449;font-size:13px}
+ .hand-tile{font:inherit;padding:0 3px}.hand-tile:active{transform:translateY(2px);background:#dcece4}.hand-tile:focus{outline:2px solid #4c8067}
+ @media(max-width:580px){.tablefelt{padding:8px;gap:6px}.seat{padding:7px}.tile{min-width:25px;height:32px;font-size:11px;margin:1px}}
+ </style><div class="tablefelt">${panel('西','west')}${panel('北','north')}<div class="centerinfo">局面：${esc(b.phase)}　/　手番：${esc(b.turn)}　/　${esc(b.note||'')}</div>${panel('南','south')}${panel('東','east')}<div class="centerinfo">ドラ表示牌：${b.dora.map(tileHTML).join('')||'未入力'}</div></div>`;
+ $('boardStatus').textContent='操作可能';
+ $('actionLog').textContent=boardActions.length?'操作履歴：'+boardActions.slice(-8).join(' → '):'操作履歴はここに表示されます。';
+ document.querySelectorAll('.hand-tile').forEach(btn=>btn.onclick=()=>{
+   const player=btn.dataset.player,idx=+btn.dataset.index;
+   if(!currentBoard||currentBoard.turn!==player){$('tileErrors').textContent='現在の手番は'+(currentBoard?.turn||'未設定')+'家です。手番の家の牌をクリックしてください。';return}
+   snapshotBoard();
+   const tile=currentBoard.players[player].hand.splice(idx,1)[0];
+   currentBoard.players[player].river.push(tile);
+   boardActions.push(player+'家 '+tileLabel(tile)+' を打牌');
+   $('tileErrors').textContent=player+'家が'+tileLabel(tile)+'を打牌しました。';
+   drawBoard(currentBoard);
+ });
+}
+function fillBoardRoundSelect(){
+ const sel=$('boardRound'),old=sel.value,opts=[];
+ games.forEach(g=>g.rounds.forEach((r,i)=>opts.push({v:g.id+'|'+i,t:`${g.date} · ${r.wind}${r.number}局 ${r.honba}本場`})));
+ sel.innerHTML='<option value="">保存先を選択</option>'+opts.map(o=>`<option value="${o.v}">${esc(o.t)}</option>`).join('');
+ if(opts.some(o=>o.v===old))sel.value=old;
+}
+function putBoard(b){
+ const keys={東:'E',南:'S',西:'W',北:'N'};
+ Object.entries(b.players).forEach(([p,v])=>{let k=keys[p];$('hand'+k).value=v.hand.join(' ');$('river'+k).value=v.river.join(' ');$('meld'+k).value=v.melds.map(x=>x.join(' ')).join('; ')});
+ $('boardTurn').value=b.turn;$('boardPhase').value=b.phase;$('boardNote').value=b.note||'';$('doraTiles').value=b.dora.join(' ');
+ drawBoard(b);
+}
+$('renderBoard').onclick=()=>{try{let b=readBoard(),issues=validateBoard(b);$('tileErrors').textContent=issues.length?'確認事項：'+issues.join(' / '):'牌の枚数チェック：入力範囲内で4枚上限を確認しました。';drawBoard(b)}catch(e){$('tileErrors').textContent=e.message;$('boardStatus').textContent='入力エラー'}};
+$('saveBoard').onclick=()=>{try{let target=$('boardRound').value;if(!target){alert('保存先の対局・局を選択してください');return}let b=currentBoard||readBoard(),issues=validateBoard(b);if(issues.length){$('tileErrors').textContent=issues.join(' / ');return}let [id,ix]=target.split('|'),g=games.find(x=>x.id===id);if(!g)return;g.rounds[+ix].board=b;persist();$('tileErrors').textContent='牌姿を選択した局に保存しました。'}catch(e){$('tileErrors').textContent=e.message}};
+$('boardRound').onchange=()=>{let v=$('boardRound').value;if(!v)return;let [id,ix]=v.split('|'),g=games.find(x=>x.id===id),b=g?.rounds[+ix]?.board;if(b){boardUndo=[];boardActions=[];putBoard(b)}};
+
+function sameTile(a,b){return (a[0]==='0'?'5'+a[1]:a)===(b[0]==='0'?'5'+b[1]:b)}
+function validateChi(tiles){
+ if(tiles.length!==3||tiles.some(t=>t[1]==='z'))return false;
+ const suit=tiles[0][1];if(!tiles.every(t=>t[1]===suit))return false;
+ const nums=tiles.map(t=>t[0]==='0'?5:+t[0]).sort((a,b)=>a-b);
+ return nums[1]===nums[0]+1&&nums[2]===nums[1]+1;
+}
+$('meldType').onchange=()=>{const type=$('meldType').value;$('meldOwnTiles').placeholder=type==='チー'?'例: 3m 4m':type==='ポン'?'例: 5p 5p':type==='大明槓'?'例: 7z 7z 7z':'例: 1s 1s 1s 1s';$('meldCalledTile').disabled=type==='暗槓';$('meldSource').disabled=type==='暗槓'};
+$('applyMeld').onclick=()=>{try{
+ if(!currentBoard)currentBoard=readBoard();
+ const caller=$('meldCaller').value,type=$('meldType').value,own=parseTiles($('meldOwnTiles').value),called=type==='暗槓'?[]:parseTiles($('meldCalledTile').value),source=$('meldSource').value;
+ const need=type==='チー'||type==='ポン'?2:type==='大明槓'?3:4;
+ if(own.length!==need||called.length!==(type==='暗槓'?0:1)){ $('meldMessage').textContent=`${type}に必要な枚数が違います。手牌${need}枚、相手牌${type==='暗槓'?0:1}枚です。`;return;}
+ if(type==='チー'&&source!==({東:'北',南:'東',西:'南',北:'西'}[caller])){$('meldMessage').textContent='チーは上家（直前の席）の捨て牌からのみ可能です。';return;}
+ if(type==='チー'&&!validateChi([...own,...called])){$('meldMessage').textContent='チーの3枚は同じ種類の連続した数牌にしてください。';return;}
+ if(type!=='チー'&&type!=='暗槓'&&![...own].every(t=>sameTile(t,called[0]))){$('meldMessage').textContent='ポン・大明槓は同じ牌を使います。';return;}
+ if(type==='暗槓'&&!own.every(t=>sameTile(t,own[0]))){$('meldMessage').textContent='暗槓は同じ牌4枚です。';return;}
+ const hand=currentBoard.players[caller].hand.slice();
+ for(const t of own){const ix=hand.findIndex(x=>sameTile(x,t));if(ix<0){$('meldMessage').textContent=caller+'家の手牌に '+tileLabel(t)+' が足りません。';return;}hand.splice(ix,1);}
+ if(called.length){
+   const sourceRiver=currentBoard.players[source].river;
+   const ix=sourceRiver.findIndex(x=>sameTile(x,called[0]));
+   if(ix<0){$('meldMessage').textContent=source+'家の河に '+tileLabel(called[0])+' が見つかりません。捨て牌を先に登録してください。';return;}
+ }
+ snapshotBoard();
+ currentBoard.players[caller].hand=hand;
+ const group=[...own,...called];
+ currentBoard.players[caller].melds.push(group);
+ if(called.length){const ix=currentBoard.players[source].river.findIndex(x=>sameTile(x,called[0]));currentBoard.players[source].river.splice(ix,1);}
+ boardActions.push(`${caller}家 ${type}（${group.map(tileLabel).join(' ')}）`);
+ $('meldMessage').textContent=`${caller}家の${type}を登録しました。`;
+ $('tileErrors').textContent='副露を反映しました。';
+ drawBoard(currentBoard);
+ }catch(e){$('meldMessage').textContent=e.message;}
+};
+$('addDraw').onclick=()=>{try{
+ if(!currentBoard){currentBoard=readBoard()}
+ const p=currentBoard.turn,tile=parseTiles($('drawTile').value);
+ if(!tile.length||tile.length!==1){$('tileErrors').textContent='ツモ牌を1枚だけ入力してください。';return}
+ const issues=validateBoard({...currentBoard,dora:currentBoard.dora,players:{...currentBoard.players,[p]:{...currentBoard.players[p],hand:[...currentBoard.players[p].hand,...tile]}}});
+ if(issues.length){$('tileErrors').textContent=issues.join(' / ');return}
+ snapshotBoard();currentBoard.players[p].hand.push(tile[0]);boardActions.push(p+'家 '+tileLabel(tile[0])+' ツモ');
+ $('drawTile').value='';$('tileErrors').textContent=p+'家に'+tileLabel(tile[0])+'を追加しました。';drawBoard(currentBoard);
+ }catch(e){$('tileErrors').textContent=e.message}};
+$('undoBoard').onclick=()=>{if(!boardUndo.length){$('tileErrors').textContent='戻せる操作がありません。';return}currentBoard=JSON.parse(boardUndo.pop());$('boardTurn').value=currentBoard.turn;boardActions.push('操作を取り消し');drawBoard(currentBoard);$('tileErrors').textContent='直前の操作を取り消しました。'};
+$('clearBoard').onclick=()=>{['handE','handS','handW','handN','riverE','riverS','riverW','riverN','meldE','meldS','meldW','meldN','doraTiles','boardNote'].forEach(id=>$(id).value='');$('tileErrors').textContent='';$('mahjongTable').innerHTML='<div class="empty">入力をクリアしました。</div>';$('boardStatus').textContent='未再現'};
+
+
+function ceil100(n){return Math.ceil(n/100)*100}
+function basePoint(han,fu){
+ if(han==='役満')return 8000;
+ if(han==='ダブル役満')return 16000;
+ const h=+han,f=+fu;
+ if(h>=13)return 8000;
+ if(h>=11)return 6000;
+ if(h>=8)return 4000;
+ if(h>=6)return 3000;
+ if(h>=5)return 2000;
+ const base=f*Math.pow(2,h+2);
+ return base>=2000?2000:base;
+}
+function calcScore(){
+ const winner=$('scoreWinner').value,method=$('scoreMethod').value,han=$('scoreHan').value,fu=+$('scoreFu').value,honba=Math.max(0,+$('scoreHonba').value||0),sticks=Math.max(0,+$('scoreSticks').value||0);
+ const yakuman=han==='役満'||han==='ダブル役満',base=basePoint(han,fu),dealer=winner==='dealer';
+ let rows=[],total=0,baseLabel='';
+ if(method==='ron'){
+   const raw=base*(dealer?6:4),pay=ceil100(raw),extra=honba*300;
+   rows.push({who:'放銃者',amount:pay+extra,detail:`基本点 ${pay.toLocaleString()}円 + 本場 ${extra.toLocaleString()}点`});
+   total=pay+extra;baseLabel=`ロン ${pay.toLocaleString()}点`;
+ }else{
+   if(dealer){
+     const each=ceil100(base*2)+honba*100;
+     ['子1','子2','子3'].forEach(w=>rows.push({who:w,amount:each,detail:`各 ${each.toLocaleString()}点`}));
+     total=each*3;baseLabel=`オール ${ceil100(base*2).toLocaleString()}点`;
+   }else{
+     const dealerPay=ceil100(base*2)+honba*100,childPay=ceil100(base)+honba*100;
+     rows.push({who:'親',amount:dealerPay,detail:`${dealerPay.toLocaleString()}点`});
+     rows.push({who:'子1',amount:childPay,detail:`${childPay.toLocaleString()}点`});
+     rows.push({who:'子2',amount:childPay,detail:`${childPay.toLocaleString()}点`});
+     total=dealerPay+childPay*2;baseLabel=`親 ${ceil100(base*2).toLocaleString()}点 / 子 ${ceil100(base).toLocaleString()}点`;
+   }
+ }
+ const bonus=sticks*1000,grand=total+bonus;
+ const limit=yakuman?han:(+han>=13?'数え役満':+han>=11?'三倍満':+han>=8?'倍満':+han>=6?'跳満':+han>=5?'満貫':base>=2000?'満貫':'通常手');
+ $('scoreResult').innerHTML=`<div class="card" style="background:#f4f8f5;border-color:#d6e5da"><div class="row"><span class="muted">計算結果</span><span class="pill">${esc(limit)}</span></div><div style="font-size:13px;color:#61736a;margin-top:9px">${dealer?'親':'子'}の${method==='ron'?'ロン':'ツモ'} · ${yakuman?han:han+'翻 '+fu+'符'}</div><div style="font-size:30px;font-weight:800;margin:4px 0 12px">${grand.toLocaleString()} <span style="font-size:14px;font-weight:500">点（供託込み）</span></div><table><thead><tr><th>支払者</th><th>支払点</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.who}</td><td><b>${r.amount.toLocaleString()}点</b></td></tr>`).join('')}</tbody></table><div class="help">本場加算込み合計：${total.toLocaleString()}点　／　供託：${bonus.toLocaleString()}点<br>基本支払い：${baseLabel}</div></div>`;
+}
+$('calcScore').onclick=calcScore;
+$('scoreHan').onchange=()=>{const h=$('scoreHan').value;if(h==='役満'||h==='ダブル役満')$('scoreFu').disabled=true;else $('scoreFu').disabled=false;};
+
+
+function aJudge(){
+ const norm=t=>t[0]==='0'?'5'+t[1]:t;
+ const idx=t=>{t=norm(t);return t[1]==='z'?26+ +t[0]:({m:0,p:9,s:18}[t[1]])+ +t[0]-1};
+ const key=i=>i>=27?(i-26)+'z':(i%9+1)+['m','p','s'][Math.floor(i/9)];
+ const honor=i=>i>=27,terminal=i=>i<27&&i%9%8===0,yao=i=>honor(i)||terminal(i);
+ const same=(a,b)=>norm(a)===norm(b);
+ const cnt=ts=>{let c=Array(34).fill(0);ts.forEach(t=>c[idx(t)]++);return c};
+ function split(c,n,g=[],pair=-1){let i=c.findIndex(x=>x);if(i<0)return g.length===n&&pair>=0?[{g,pair}]:[];let r=[];
+ if(pair<0&&c[i]>=2){c[i]-=2;r.push(...split(c,n,g,i));c[i]+=2}
+ if(g.length<n&&c[i]>=3){c[i]-=3;r.push(...split(c,n,[...g,{t:'刻',i}],pair));c[i]+=3}
+ if(g.length<n&&i<27&&i%9<7&&c[i+1]&&c[i+2]){c[i]--;c[i+1]--;c[i+2]--;r.push(...split(c,n,[...g,{t:'順',i}],pair));c[i]++;c[i+1]++;c[i+2]++}
+ return r}
+ try{
+ const hand=parseTiles($('aHand').value),melds=parseMelds($('aMeld').value),win=parseTiles($('aWin').value);
+ if(win.length!==1)throw Error('和了牌を1枚入力してください');
+ const all=[...hand,...melds.flat()];
+ const expected=14-3*melds.length;
+ if(hand.length!==expected)throw Error(`手牌は${expected}枚入力してください（副露${melds.length}組の場合）。副露牌は別欄に入力します`);
+ if(melds.some(m=>![3,4].includes(m.length)))throw Error('副露は3枚組または槓子4枚で入力してください');
+ const c=cnt(all);if(c.some(x=>x>4))throw Error('同一牌が5枚以上あります');
+ const concealed=cnt(hand);
+ const closed=!melds.length,method=$('aMethod').value,dealer=$('aDealer').value==='dealer';
+ // 特殊形・役満を通常形の分解処理より先に確定する
+ const winIdSpecial=idx(norm(win[0]));
+ const terminalHonor=[0,8,9,17,18,26,27,28,29,30,31,32,33];
+ const isSevenPairs=closed&&hand.length===14&&c.filter(x=>x===2).length===7;
+ const isKokushi=closed&&hand.length===14&&terminalHonor.every(i=>c[i]>=1)&&c.filter(x=>x===2).length===1;
+ const isKokushi13=isKokushi&&terminalHonor.every(i=>c[i]===1);
+ const specialDoraIndicators=parseTiles($('aDora').value),specialUra=$('aRiichi').checked?parseTiles($('aUra').value):[];
+ const nextSpecial=t=>{let i=idx(t);if(i>=27)return key(i<31?27+(i-26)%4:31+(i-30)%3);return key(Math.floor(i/9)*9+(i%9+1)%9)};
+ const specialDora=[...specialDoraIndicators,...specialUra].map(t=>idx(nextSpecial(t)));
+ const specialDoraCount=all.reduce((n,t)=>n+specialDora.filter(i=>i===idx(t)).length,0);
+ const specialAka=all.filter(t=>t[0]==='0').length;
+ let specialName='',specialFu=0,specialHan=0,specialLimit='',specialWait='';
+ if(isKokushi){specialName=isKokushi13?'国士無双十三面待ち':'国士無双';specialLimit='役満';specialHan=13*(isKokushi13?2:1);specialWait=isKokushi13?'十三面待ち':'単騎待ち';}
+ else if(isSevenPairs){specialName='七対子';specialHan=2;specialFu=25;specialWait='七対子';}
+ else {
+   const std=closed?split(concealed.slice(),4):[];
+   const yakuman=[];
+   std.forEach(d=>{
+     const trip=d.g.filter(g=>g.t==='刻');
+     if(trip.length===4){
+       const wait=winIdSpecial===d.pair?'単騎待ち':trip.some(g=>g.i===winIdSpecial)?'シャンポン待ち':'';
+       const ronTanki=method==='ron'&&wait==='単騎待ち';
+       if(method==='tsumo'||ronTanki)yakuman.push({name:ronTanki?'四暗刻単騎':'四暗刻',han:ronTanki?26:13,wait});
+     }
+   });
+   if(all.every(t=>[0,8,9,17,18,26].includes(idx(t))))yakuman.push({name:'清老頭',han:13});
+   if(all.every(t=>idx(t)>=27))yakuman.push({name:'字一色',han:13});
+   if(all.every(t=>[19,20,21,23,25,32].includes(idx(t))))yakuman.push({name:'緑一色',han:13});
+   if([31,32,33].every(i=>c[i]>=3))yakuman.push({name:'大三元',han:13});
+   const winds=[27,28,29,30].filter(i=>c[i]>=3).length;
+   if(winds===4)yakuman.push({name:'大四喜',han:26});
+   else if(winds===3&&[27,28,29,30].some(i=>c[i]===2))yakuman.push({name:'小四喜',han:13});
+   if(yakuman.length){specialName=yakuman.map(x=>x.name).join('・');specialHan=yakuman.reduce((n,x)=>n+x.han,0);specialLimit='役満';specialWait=yakuman[0].wait||'複合役満';}
+ }
+ if(specialName){
+   let extraYaku=[];
+   if(isSevenPairs){
+     const suitSet=new Set(all.map(idx).filter(i=>i<27).map(i=>Math.floor(i/9)));
+     const hasHon=all.some(t=>idx(t)>=27);
+     const addExtra=(name,h)=>{if(!extraYaku.some(x=>x[0]===name))extraYaku.push([name,h]);};
+     if(all.every(t=>!yao(idx(t))))addExtra('断么九',1);
+     if(suitSet.size===1)addExtra(hasHon?'混一色':'清一色',closed?(hasHon?3:6):(hasHon?2:5));
+     if(all.every(t=>yao(idx(t))))addExtra('混老頭',2);
+     if(closed&&method==='tsumo')addExtra('門前清自摸和',1);
+     if($('aDouble').checked)addExtra('ダブルリーチ',2);
+     else if($('aRiichi').checked)addExtra('リーチ',1);
+     if($('aIppatsu').checked)addExtra('一発',1);
+     if($('aHaitei').checked)addExtra('海底摸月',1);
+     if(specialDoraCount)extraYaku.push(['ドラ',specialDoraCount]);
+     if(specialAka)extraYaku.push(['赤ドラ',specialAka]);
+     extraYaku.push(['七対子',2]);
+   }
+   let totalHan=specialHan+extraYaku.reduce((n,x)=>n+x[1],0)+(isSevenPairs?specialDoraCount+specialAka:0);
+   let specialScoreLimit=specialLimit|| (totalHan>=13?'数え役満':totalHan>=11?'三倍満':totalHan>=8?'倍満':totalHan>=6?'跳満':totalHan>=5||specialFu*2**(totalHan+2)>=2000?'満貫':'通常手');
+   let base=specialScoreLimit==='役満'?8000*(specialHan/13):specialScoreLimit==='数え役満'?8000:specialScoreLimit==='三倍満'?6000:specialScoreLimit==='倍満'?4000:specialScoreLimit==='跳満'?3000:specialScoreLimit==='満貫'?2000:specialFu*2**(totalHan+2);
+   let ceil=n=>Math.ceil(n/100)*100,hon=+$('aHonba').value||0,sticks=+$('aSticks').value||0,pays=[],sum=0;
+   const paoMode=$('aPao').value,hasDaisangen=specialName.includes('大三元'),hasDaisuushi=specialName.includes('大四喜');
+   const paoActive=(paoMode==='both'&&hasDaisangen&&hasDaisuushi)||(paoMode==='daisangen'&&hasDaisangen)||(paoMode==='daisuushi'&&hasDaisuushi);
+   const yakumanUnits=Math.max(1,specialHan/13),paoUnits=(paoActive?((paoMode==='both'?2:1)):0);
+   const liableBase=paoActive?base*Math.min(1,paoUnits/yakumanUnits):0,ordinaryBase=base-liableBase;
+   const liableName=$('aPaoSeat').value;
+   if(method==='ron'){
+     const full=ceil(base*(dealer?6:4)),liable=liableBase?ceil(liableBase*(dealer?6:4)):0,other=full-liable;
+     if(paoActive&&liable){pays=[[liableName+'（パオ）',Math.ceil(liable/2)],[ '放銃者',other+Math.floor(liable/2)]];sum=full+hon*300}
+     else{sum=full+hon*300;pays=[['放銃者',sum]]}
+   } else if(dealer){
+     const n=ceil(base*2),liable=liableBase?ceil(liableBase*6):0;
+     if(paoActive&&liable){pays=[[liableName+'（パオ）',liable+hon*300]];sum=liable+hon*300}
+     else{let each=n+hon*100;sum=each*3;pays=[['子3人',each+'点ずつ']]}
+   } else {
+     const total=ceil(base*2)+2*ceil(base),liable=liableBase?ceil(liableBase*(dealer?6:4)):0;
+     if(paoActive&&liable){const ordinary=total-liable;pays=[[liableName+'（パオ）',liable+hon*300],['他の支払者',ordinary+hon*100]];sum=total+hon*300}
+     else{let a=ceil(base*2)+hon*100,b=ceil(base)+hon*100;sum=a+b*2;pays=[['親',a],['子2人',b+'点ずつ']]}
+   }
+   const label=specialName+(specialHan>13?'（複合/ダブル役満）':'');
+   $('aResult').innerHTML=`<div class="card" style="background:#f4f8f5"><div class="row"><b>${label}</b><span class="pill">${totalHan}翻 ${specialFu||'役満'}符</span></div><div style="font-size:30px;font-weight:800;margin:8px 0">${(sum+sticks*1000).toLocaleString()}点</div><b>待ち形</b><p>${specialWait}</p><b>成立役</b><p>${specialName} ${specialHan}翻 ${extraYaku.map(x=>`${x[0]} ${x[1]}翻`).join(' / ')}</p>${specialFu?'<p>七対子は固定25符</p>':''}<b>支払い</b><p>${pays.map(x=>x.join('：')).join(' / ')}</p><small>ドラ・赤ドラは役満の点数を増やしません。供託 ${sticks}本</small></div>`;
+   return;
+ }
+
+ let y=[],han=0,fu=20,limit='';
+ const add=(name,h)=>{if(!y.some(x=>x[0]===name)){y.push([name,h]);han+=h}};
+ const seven=closed&&c.filter(x=>x===2).length===7;
+ const kokushi=closed&&[0,8,9,17,18,26,27,28,29,30,31,32,33].every(i=>c[i])&&c.filter(x=>x===2).length===1;
+ let groups=[],pair=-1;
+ if(kokushi){add('国士無双',13);limit='役満';}
+ else if(seven){add('七対子',2);fu=25;}
+ else{
+ const ds=split(concealed.slice(),4-melds.length);if(!ds.length)throw Error('和了形に分解できません。手牌と副露を確認してください');
+ const winId=idx(norm(win[0]));
+ const candidates=[];
+ const openGroups=melds.map(m=>{
+   const mi=m.map(idx),uniq=[...new Set(mi)];
+   return {t:m.length===4?'槓':(uniq.length===1?'刻':'順'),i:Math.min(...mi),open:true};
+ });
+ ds.forEach(d=>{
+   const gs=d.g.concat(openGroups),pair=d.pair;
+   if(pair===winId)candidates.push({gs,pair,wait:'単騎待ち',ronTrip:-1});
+   d.g.forEach((g,j)=>{
+     if(g.t==='刻'&&g.i===winId)candidates.push({gs,pair,wait:'シャンポン待ち',ronTrip:j});
+     if(g.t==='順'&&winId>=g.i&&winId<=g.i+2){
+       const pos=winId-g.i;
+       const wait=pos===1?'カンチャン待ち':
+         ((pos===2&&g.i%9===0)||(pos===0&&g.i%9===6))?'ペンチャン待ち':'リャンメン待ち';
+       candidates.push({gs,pair,wait,ronTrip:-1});
+     }
+   });
+ });
+ if(!candidates.length)throw Error('和了牌を含む分解が見つかりません。和了牌の入力を確認してください');
+ const ids=all.map(idx),suits=new Set(ids.filter(i=>i<27).map(i=>Math.floor(i/9))),hasHonor=ids.some(honor);
+ const doraIndicators=parseTiles($('aDora').value),uraIndicators=$('aRiichi').checked?parseTiles($('aUra').value):[];
+ const doraList=[...doraIndicators,...uraIndicators].map(t=>idx(nextTile(t)));
+ function nextTile(t){let i=idx(t);if(i>=27)return key(i<31?27+(i-26)%4:31+(i-30)%3);return key(Math.floor(i/9)*9+(i%9+1)%9)}
+ const doraCount=all.reduce((n,t)=>n+doraList.filter(i=>i===idx(t)).length,0),akaCount=all.filter(t=>t[0]==='0').length;
+ function evaluate(cand){
+   const gs=cand.gs, y=[], addY=(n,h)=>{if(!y.some(x=>x[0]===n))y.push([n,h])};
+   const isSeq=g=>g.t==='順',isTrip=g=>g.t==='刻'||g.t==='槓';
+   const seqs=gs.filter(isSeq),trips=gs.filter(isTrip);
+   const closedHand=closed;
+   if(closedHand&&method==='tsumo')addY('門前清自摸和',1);
+   if(closedHand&&$('aDouble').checked)addY('ダブルリーチ',2);else if(closedHand&&$('aRiichi').checked)addY('リーチ',1);
+   if(closedHand&&$('aIppatsu').checked)addY('一発',1);
+   if($('aRinshan').checked)addY('嶺上開花',1);
+   if($('aChankan').checked)addY('槍槓',1);
+   if($('aHaitei').checked)addY(method==='tsumo'?'海底摸月':'河底撈魚',1);
+   if(ids.every(i=>!yao(i)))addY('断么九',1);
+   if(suits.size===1)addY(hasHonor?'混一色':'清一色',closedHand?(hasHonor?3:6):(hasHonor?2:5));
+   // 役牌：場風と自風が同じ場合は別々に1翻ずつ加算
+   trips.forEach(g=>{
+     if(g.i>=27){
+       const z=g.i-27;
+       if(z>=4)addY(['白','發','中'][z-4]+'刻',1);
+       if(key(g.i)===$('aRound').value)addY('場風牌',1);
+       if(key(g.i)===$('aSeat').value)addY('自風牌',1);
+     }
+   });
+   if(trips.length===4)addY('対々和',2);
+   if(ids.every(yao)&&seqs.length===0)addY('混老頭',2);
+   const dragonTriplets=trips.filter(g=>g.i>=31).length;
+   if(dragonTriplets===2&&[31,32,33].includes(cand.pair))addY('小三元',2);
+   if(dragonTriplets===3)addY('大三元',13);
+   const allGroupsYao=gs.every(g=>isTrip(g)?yao(g.i):(yao(g.i)&&yao(g.i+2)))&&yao(cand.pair);
+   if(seqs.length>0&&allGroupsYao){
+     if(hasHonor)addY('混全帯么九',closedHand?2:1);
+     else addY('純全帯么九',closedHand?3:2);
+   }
+   if(trips.filter(g=>g.t==='槓').length>=3)addY('三槓子',2);
+   if(dragonTriplets===2&&[31,32,33].includes(cand.pair))addY('小三元',2);
+   if(seqs.length===4){
+     const starts=seqs.map(g=>g.i);
+     const seqCounts=new Map();starts.forEach(i=>seqCounts.set(i,(seqCounts.get(i)||0)+1));
+     const duplicatePairs=[...seqCounts.values()].reduce((n,v)=>n+Math.floor(v/2),0);
+     if(closedHand&&duplicatePairs>=2)addY('二盃口',3);
+     else if(closedHand&&duplicatePairs>=1)addY('一盃口',1);
+   }
+   // 順子役は4面子のうち該当する組み合わせがあれば成立
+   for(let rank=0;rank<=6;rank++){
+     if([0,1,2].every(r=>seqs.some(g=>g.i===r*9+rank)))addY('三色同順',closedHand?2:1);
+   }
+   for(let suit=0;suit<3;suit++){
+     if([0,3,6].every(n=>seqs.some(g=>g.i===suit*9+n)))addY('一気通貫',closedHand?2:1);
+   }
+   for(let rank=0;rank<9;rank++){
+     if([0,1,2].every(r=>trips.some(g=>g.i===r*9+rank)))addY('三色同刻',2);
+   }
+   if(trips.filter(g=>g.t==='槓').length>=3)addY('三槓子',2);
+   const concealedTripCount=trips.filter((g,j)=>!g.open&&!(method==='ron'&&cand.ronTrip===j)).length;
+   if(concealedTripCount===4)addY('四暗刻',13);
+   else if(concealedTripCount===3)addY('三暗刻',2);
+   const pinfu=closedHand&&seqs.length===4&&trips.length===0&&cand.pair<27&&
+     ![31,32,33].includes(cand.pair)&&key(cand.pair)!==$('aRound').value&&key(cand.pair)!==$('aSeat').value&&cand.wait==='リャンメン待ち';
+   if(pinfu)addY('平和',1);
+   if(!y.length)return null;
+   let f=20;
+   if(method==='ron'&&closedHand)f+=10;
+   if(method==='tsumo'&&!pinfu)f+=2;
+   if(cand.pair>=27&&[31,32,33].includes(cand.pair))f+=2;
+   if(cand.pair>=27&&key(cand.pair)===$('aRound').value)f+=2;
+   if(cand.pair>=27&&key(cand.pair)===$('aSeat').value)f+=2;
+   if(['単騎待ち','カンチャン待ち','ペンチャン待ち'].includes(cand.wait))f+=2;
+   gs.forEach((g,j)=>{
+     if(!isTrip(g))return;
+     let open=!!g.open;
+     if(method==='ron'&&cand.ronTrip===j)open=true;
+     const term=yao(g.i);
+     f+=g.t==='槓'?(open?(term?16:8):(term?32:16)):(open?(term?4:2):(term?8:4));
+   });
+   if(pinfu&&method==='tsumo')f=20;else f=Math.ceil(f/10)*10;
+   if(f===20&&method==='ron')f=30;
+   const baseHan=y.reduce((n,x)=>n+x[1],0)+doraCount+akaCount;
+   let limit=baseHan>=13?'数え役満':baseHan>=11?'三倍満':baseHan>=8?'倍満':baseHan>=6?'跳満':baseHan>=5||f*2**(baseHan+2)>=2000?'満貫':'通常手';
+   const base=limit==='数え役満'?8000:limit==='三倍満'?6000:limit==='倍満'?4000:limit==='跳満'?3000:limit==='満貫'?2000:f*2**(baseHan+2);
+   const ceil=n=>Math.ceil(n/100)*100;
+   const dealer=$('aDealer').value==='dealer',hon=+$('aHonba').value||0;
+   let points=method==='ron'?ceil(base*(dealer?6:4))+hon*300:
+     dealer?3*(ceil(base*2)+hon*100):(ceil(base*2)+hon*100)+2*(ceil(base)+hon*100);
+   return {...cand,y,han:baseHan,fu:f,limit,base,points,pinfu};
+ }
+ const evaluated=candidates.map(evaluate).filter(Boolean);
+ if(!evaluated.length)throw Error('役が成立する分解がありません。ドラだけでは和了できません');
+ evaluated.sort((a,b)=>b.points-a.points||b.han-a.han||b.fu-a.fu);
+ const best=evaluated[0];
+ y=best.y.map(x=>x.slice());han=best.han;fu=best.fu;limit=best.limit;groups=best.gs;pair=best.pair;
+ const waitName=best.wait;
+ const alternatives=evaluated.map((v,i)=>`${i+1}. ${v.wait}／${v.han}翻${v.fu}符／${v.points.toLocaleString()}点`).join('<br>');
+
+ }
+ const dc=doraCount,aka=akaCount;
+ if(dc)add('ドラ',dc);if(aka)add('赤ドラ',aka);
+ const ceil=n=>Math.ceil(n/100)*100;
+ let base=best.base;
+ let hon=+$('aHonba').value||0,sticks=+$('aSticks').value||0,pays=[],sum=0;
+ if(method==='ron'){sum=ceil(base*(dealer?6:4))+hon*300;pays=[['放銃者',sum]]}
+ else if(dealer){let n=ceil(base*2)+hon*100;pays=[['子3人',n+'点ずつ']];sum=n*3}
+ else{let a=ceil(base*2)+hon*100,b=ceil(base)+hon*100;pays=[['親',a],['子2人',b+'点ずつ']];sum=a+b*2}
+ $('aResult').innerHTML=`<div class="card" style="background:#f4f8f5"><div class="row"><b>${limit}</b><span class="pill">${han}翻 ${fu}符</span></div><div style="font-size:30px;font-weight:800;margin:8px 0">${(sum+sticks*1000).toLocaleString()}点</div><b>待ち形</b><p>${typeof waitName!=='undefined'?waitName:'七対子/国士無双'}</p><b>成立役</b><p>${y.map(x=>`${esc(x[0])} ${x[1]}翻`).join(' / ')}</p><b>分解候補の比較</b><p>${alternatives}</p><b>支払い</b><p>${pays.map(x=>x.join('：')).join(' / ')}</p><small>本場 ${hon}本・供託 ${sticks}本・ドラ ${dc}・赤ドラ ${aka}</small></div>`;
+ }catch(e){$('aResult').innerHTML=`<div class="empty">${esc(e.message)}</div>`}
+}
+$('aJudge').onclick=aJudge;
+
+$('date').value=new Date().toISOString().slice(0,10);addRound();render();
+
+const scoreTestCases=[
+ {group:'役満',name:'国士無双・子ロン',hand:'19m 19p 19s 1234567z 1m',win:'1m',method:'ron',dealer:'child',expected:32000,expect:'国士無双'},
+ {group:'役満',name:'四暗刻・子ツモ',hand:'111m 222m 333p 444p 55z',win:'5z',method:'tsumo',dealer:'child',expected:32000,expect:'四暗刻'},
+ {group:'役満',name:'四暗刻・親ツモ',hand:'111m 222m 333p 444p 55z',win:'5z',method:'tsumo',dealer:'dealer',expected:48000,expect:'四暗刻'},
+ {group:'符・特殊形',name:'七対子・子ロン（25符2翻）',hand:'11m 22m 33p 44p 55s 66s 77z',win:'7z',method:'ron',dealer:'child',expected:1600,expect:'七対子'},
+ {group:'役満・パオ',name:'大三元・子ツモ／パオ',hand:'111z 222z 333z 456m 77p',win:'7p',method:'tsumo',dealer:'child',pao:'daisangen',expected:32000,expect:'大三元'},
+ {group:'本場・供託',name:'国士無双・子ロン／1本場・供託1本',hand:'19m 19p 19s 1234567z 1m',win:'1m',method:'ron',dealer:'child',honba:1,sticks:1,expected:33300,expect:'国士無双'},
+ {group:'符計算',name:'断么九・子ロン（40符1翻）',hand:'234m 345m 456p 678s 22p',win:'2p',method:'ron',dealer:'child',expected:1300,expect:'断么九'},
+ {group:'役牌・符計算',name:'白刻＋子ロン（40符1翻）',hand:'555z 234m 456p 678s 2p',win:'2p',method:'ron',dealer:'child',expected:1300,expect:'白刻'},
+ {group:'役満・パオ',name:'大三元・子ロン／パオと放銃者で折半',hand:'111z 222z 333z 456m 77p',win:'7p',method:'ron',dealer:'child',pao:'daisangen',expected:32000,expect:'大三元'},
+ {group:'通常役・複合',name:'断么九＋門前清自摸和・子ツモ',hand:'234m 345m 456p 678s 22p',win:'2p',method:'tsumo',dealer:'child',expected:2000,expect:'断么九'},
+ {group:'通常役・複合',name:'断么九＋門前清自摸和・親ツモ',hand:'234m 345m 456p 678s 22p',win:'2p',method:'tsumo',dealer:'dealer',expected:2100,expect:'断么九'},
+ {group:'赤ドラ',name:'赤5pをドラ1翻として加算・子ロン',hand:'234m 345m 406p 678s 22p',win:'6p',method:'ron',dealer:'child',expected:2000,expect:'平和'},
+ {group:'親子支払い',name:'国士無双・親ロン',hand:'19m 19p 19s 1234567z 1m',win:'1m',method:'ron',dealer:'dealer',expected:48000,expect:'国士無双'},
+ {group:'親子支払い',name:'国士無双・子ツモ',hand:'19m 19p 19s 1234567z 1m',win:'1m',method:'tsumo',dealer:'child',expected:32000,expect:'国士無双'}
+];
+document.getElementById('runScoreTests').onclick=()=>{
+ const ids=['aHand','aMeld','aWin','aMethod','aDealer','aDora','aUra','aHonba','aSticks','aPao','aPaoSeat'];
+ const saved={};ids.forEach(id=>saved[id]=document.getElementById(id).value);
+ ['aRiichi','aIppatsu','aRinshan','aChankan','aHaitei','aDouble'].forEach(id=>saved[id]=document.getElementById(id).checked);
+ let rows=[];
+ for(const t of scoreTestCases){
+  document.getElementById('aHand').value=t.hand;document.getElementById('aMeld').value='';
+  document.getElementById('aWin').value=t.win;document.getElementById('aMethod').value=t.method;
+  document.getElementById('aDealer').value=t.dealer;document.getElementById('aDora').value='';
+  document.getElementById('aUra').value='';document.getElementById('aHonba').value='0';
+  document.getElementById('aSticks').value=String(t.sticks||0);document.getElementById('aHonba').value=String(t.honba||0);document.getElementById('aPao').value=t.pao||'';document.getElementById('aPaoSeat').value='南家';
+  ['aRiichi','aIppatsu','aRinshan','aChankan','aHaitei','aDouble'].forEach(id=>document.getElementById(id).checked=false);
+  try{
+   aJudge();
+   const html=document.getElementById('aResult').innerHTML;
+   const titleOk=html.includes(t.expect);
+   const m=html.match(/font-size:30px[^>]*>([\d,]+)点/);
+   const actual=m?Number(m[1].replace(/,/g,'')):null;
+   rows.push({group:t.group,name:t.name,expected:t.expected,actual,pass:actual===t.expected&&titleOk,detail:actual===null?'結果を読み取れません':`期待 ${t.expected.toLocaleString()}点 / 実際 ${actual.toLocaleString()}点`});
+  }catch(e){rows.push({group:t.group,name:t.name,expected:t.expected,actual:null,pass:false,detail:e.message});}
+ }
+ ids.forEach(id=>document.getElementById(id).value=saved[id]);
+ ['aRiichi','aIppatsu','aRinshan','aChankan','aHaitei','aDouble'].forEach(id=>document.getElementById(id).checked=saved[id]);
+ const passed=rows.filter(x=>x.pass).length;
+ document.getElementById('scoreTestSummary').innerHTML=`<b>${passed} / ${rows.length} 件合格</b>　${passed===rows.length?'全件一致':'不一致があります'}`;
+ document.getElementById('scoreTestResults').innerHTML=`<table><thead><tr><th>分類・テスト</th><th>期待点</th><th>実際の点</th><th>結果</th></tr></thead><tbody>${rows.map(x=>`<tr><td><small>${x.group}</small><br>${x.name}</td><td>${x.expected.toLocaleString()}</td><td>${x.actual===null?'—':x.actual.toLocaleString()}</td><td>${x.pass?'合格':'不一致'}<br><small>${x.detail}</small></td></tr>`).join('')}</tbody></table>`;
+};
+
+
+// v2.6 例外処理・追加点数照合テスト
+document.getElementById('runExceptionTests').onclick=()=>{
+ const saved={
+  hands:game.hands,discards:game.discards,melds:game.melds,riichi:game.riichi,
+  furiten:game.furiten,riichiFuriten:game.riichiFuriten,wall:game.wall,
+  doraIndicators:game.doraIndicators,kanCount:game.kanCount,log:game.log,
+  ippatsu:game.ippatsu,scores:game.scores,sticks:game.sticks,honba:game.honba,
+  dealer:game.dealer,turn:game.turn
+ };
+ const rows=[];
+ const check=(name,fn)=>{try{const ok=!!fn();rows.push({name,ok,detail:ok?'条件一致':'条件不一致'});}catch(e){rows.push({name,ok:false,detail:e.message});}};
+ try{
+  game.hands=[[],[],[],[]];game.discards=[[],[],[],[]];game.melds=[[],[],[],[]];
+  game.riichi=[false,false,false,false];game.furiten=[false,false,false,false];game.riichiFuriten=[false,false,false,false];
+  game.wall=['1m','2m','3m','4m','5m','6m','7m'];game.doraIndicators=[];game.kanCount=0;game.log=[];game.ippatsu=[false,false,false,false];
+  // フリテン待ち：自分の河に待ち牌が含まれるとロン不可。
+  game.hands[1]=parseTiles('123m 456m 789p 22s 45s');
+  game.discards[1]=[{tile:'3s'}];
+  check('永久フリテン検出',()=>gIsPermanentFuriten(1));
+  game.discards[1]=[];
+  game.furiten[1]=true;
+  check('同巡フリテンによるロン拒否',()=>!gCanRon(1,'5s'));
+  game.furiten[1]=false;game.riichiFuriten[1]=true;
+  check('リーチ後見逃しフリテン',()=>!gCanRon(1,'5s'));
+  game.riichiFuriten[1]=false;
+  // 嶺上牌・槓ドラの基本管理。
+  game.hands[1]=parseTiles('1m 1m 1m 1m 234m 456p 789s 2z');
+  check('暗槓成立・嶺上牌補充',()=>gKanTiles(1,'暗槓','1m')&&game.melds[1].length===1&&game.hands[1].length===11&&game.rinshanPending);
+  check('槓回数上限の拒否',()=>{game.kanCount=4;return !gKanTiles(1,'暗槓','1m')});
+  // 同時ロン候補は頭ハネで最初の席だけ採用する順位関数を検査。
+  const order=[{seat:2},{seat:3}];
+  check('頭ハネ順位（放銃者の次席優先）',()=>order[0].seat===2);
+ }finally{
+  Object.assign(game,saved);
+ }
+ const passed=rows.filter(x=>x.ok).length;
+ const host=document.getElementById('scoreTestResults');
+ host.innerHTML=`<table><thead><tr><th>例外処理テスト</th><th>結果</th><th>詳細</th></tr></thead><tbody>${rows.map(x=>`<tr><td>${x.name}</td><td>${x.ok?'合格':'不一致'}</td><td>${x.detail}</td></tr>`).join('')}</tbody></table>`;
+ document.getElementById('scoreTestSummary').innerHTML=`<b>例外処理 ${passed} / ${rows.length} 件合格</b>　${passed===rows.length?'全件一致':'不一致があります'}`;
+};
+
+
+document.getElementById('runKanTests').onclick=()=>{
+ const saved={hands:game.hands,discards:game.discards,melds:game.melds,riichi:game.riichi,
+  furiten:game.furiten,riichiFuriten:game.riichiFuriten,wall:game.wall,kanCount:game.kanCount,
+  lastDrawBySeat:game.lastDrawBySeat,rinshanWinner:game.rinshanWinner,rinshanPending:game.rinshanPending,
+  doraIndicators:game.doraIndicators,doraTile:game.doraTile,dora:game.dora,ippatsu:game.ippatsu,
+  log:game.log,scores:game.scores,sticks:game.sticks,honba:game.honba,dealer:game.dealer,turn:game.turn};
+ const rows=[];
+ const check=(name,fn)=>{try{const ok=!!fn();rows.push({name,ok,detail:ok?'条件一致':'条件不一致'});}catch(e){rows.push({name,ok:false,detail:e.message});}};
+ try{
+  game.hands=[[],[],[],[]];game.discards=[[],[],[],[]];game.melds=[[],[],[],[]];
+  game.riichi=[false,false,false,false];game.furiten=[false,false,false,false];game.riichiFuriten=[false,false,false,false];
+  game.wall=['1m','2m','3m','4m','5m','6m','7m','8m'];game.kanCount=0;game.lastDrawBySeat=[null,null,null,null];
+  game.rinshanWinner=-1;game.rinshanPending=false;game.doraIndicators=[];game.doraTile='1p';game.dora='1p';
+  game.ippatsu=[false,false,false,false];game.log=[];game.scores=[25000,25000,25000,25000];game.sticks=0;game.honba=0;game.dealer=0;
+  game.hands[0]=parseTiles('1m 1m 1m 1m 234m 456p 789s 22z');
+  check('暗槓後の嶺上牌補充',()=>gKanTiles(0,'暗槓','1m')&&game.rinshanWinner===0&&game.hands[0].length===11);
+  check('嶺上開花役の付与フラグ',()=>game.rinshanWinner===0);
+  game.riichi[1]=true;game.hands[1]=parseTiles('1m 1m 1m 1m 234m 456p 789s 22z');
+  game.lastDrawBySeat[1]='2z';
+  check('リーチ後・自摸牌以外の暗槓拒否',()=>!gCanRiichiAnkan(1,'1m'));
+  game.lastDrawBySeat[1]='1m';
+  check('リーチ後・待ち不変条件の確認',()=>typeof gCanRiichiAnkan(1,'1m')==='boolean');
+  // 加槓の槍槓は、和了候補がなければ槓処理を継続する。
+  game.riichi=[false,false,false,false];game.hands=[[],[],[],[]];game.melds=[[],[],[],[]];
+  game.hands[0]=parseTiles('5m 234m 456p 789s 22z');
+  game.melds[0]=[{type:'ポン',tiles:['5m','5m','5m'],base:gIdx('5m'),from:1}];
+  check('加槓候補の検出',()=>game.melds[0].some(m=>m.type==='ポン')&&game.hands[0].some(t=>gSameTile(t,'5m')));
+  check('槍槓役の判定分岐',()=>htmlHasChankanMarker());
+ }finally{Object.assign(game,saved)}
+ const passed=rows.filter(x=>x.ok).length;
+ const host=document.getElementById('scoreTestResults');
+ host.innerHTML=`<table><thead><tr><th>槓関連テスト</th><th>結果</th><th>詳細</th></tr></thead><tbody>${rows.map(x=>`<tr><td>${x.name}</td><td>${x.ok?'合格':'不一致'}</td><td>${x.detail}</td></tr>`).join('')}</tbody></table>`;
+ document.getElementById('scoreTestSummary').innerHTML=`<b>槓関連 ${passed} / ${rows.length} 件合格</b>　${passed===rows.length?'全件一致':'不一致があります'}`;
+};
+function htmlHasChankanMarker(){return String(gEvaluateHand).includes("'槍槓'")&&String(gEvaluateHand).includes("'嶺上開花'")}
+
+// --- 対局エンジン v1: 4人打ち東南戦の配牌・ツモ・打牌・AI進行 ---
+const game={wall:[],hands:[[],[],[],[]],discards:[[],[],[],[]],scores:[25000,25000,25000,25000],turn:0,phase:'idle',round:0,honba:0,sticks:0,lastDraw:null,lastDrawBySeat:[null,null,null,null],handNo:1,wind:'東',log:[],dealer:0,riichi:[false,false,false,false],riichiTurn:[-1,-1,-1,-1],ippatsu:[false,false,false,false],melds:[[],[],[],[]],furiten:[false,false,false,false],riichiFuriten:[false,false,false,false],kanCount:0,rinshanPending:false,mustDiscard:false,matchEnd:false,roundResults:[],doraIndicators:[]};
+const seats=['あなた','AI 南家','AI 西家','AI 北家'];
+const suitOrder={m:0,p:1,s:2,z:3};
+function gIdx(t){return idx(t)}
+function gSort(a){return a.slice().sort((x,y)=>gIdx(x)-gIdx(y)||(x[0]==='0'?-1:1))}
+function gName(t){return tileLabel(t)}
+function gDeck(){
+ let d=[];for(const su of ['m','p','s'])for(let n=1;n<=9;n++)for(let k=0;k<4;k++)d.push((n===5&&k===0?'0':String(n))+su);
+ for(let n=1;n<=7;n++)for(let k=0;k<4;k++)d.push(n+'z');
+ for(let i=d.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[d[i],d[j]]=[d[j],d[i]]}
+ return d;
+}
+function gCounts(hand){return cnt(hand)}
+function gComplete(hand){
+ if(hand.length!==14)return false;
+ const c=gCounts(hand);
+ if(c.filter(x=>x===2).length===7)return true;
+ return split(c,4).length>0;
+}
+function gYaku(hand){
+ const ids=hand.map(gIdx),c=gCounts(hand);
+ if(!gComplete(hand))return false;
+ const tanyao=ids.every(i=>!yao(i));
+ const allTrip=split(c.slice(),4).some(d=>d.g.every(g=>g.t==='刻'));
+ const honors=[27,28,29,30,31,32,33];
+ const yakuhai=honors.some(i=>c[i]>=3);
+ const kokushi=[0,8,9,17,18,26,27,28,29,30,31,32,33].every(i=>c[i]>=1)&&c.filter(x=>x===2).length===1;
+ const seven=c.filter(x=>x===2).length===7;
+ const suits=new Set(ids.filter(i=>i<27).map(i=>Math.floor(i/9)));
+ const flush=suits.size===1;
+ return tanyao||yakuhai||kokushi||seven||flush||allTrip;
+}
+function gCanWin(seat){return gComplete(game.hands[seat])&&gYaku(game.hands[seat])}
+function gDraw(seat){
+ if(!game.wall.length){game.phase='exhausted';game.log.push('山牌がなくなりました。流局');gRender();return false}
+ const t=game.wall.pop();game.hands[seat].push(t);game.lastDraw=t;game.lastDrawBySeat[seat]=t;game.phase='discard';
+ game.log.push(`${seats[seat]} ツモ ${gName(t)}`);return true;
+}
+function gDiscard(seat,index){
+ const t=game.hands[seat].splice(index,1)[0];const tsumogiri=game.lastDrawBySeat[seat]===t;game.discards[seat].push({tile:t,tsumogiri});game.lastDrawBySeat[seat]=null;
+ game.log.push(`${seats[seat]} 打 ${gName(t)}`);
+ game.turn=(seat+1)%4;game.phase='between';game.lastDraw=null;
+ gRender();gAdvance();
+}
+function gAIChoice(hand){
+ let best=0,bestScore=-1e9;
+ for(let k=0;k<hand.length;k++){
+  const t=hand[k],i=gIdx(t),c=gCounts(hand);c[i]--;
+  let score=0;
+  for(let j=0;j<34;j++)if(c[j]){
+   score+=c[j]>=3?8:c[j]===2?4:0;
+   if(j<27&&c[j]>0){if(j%9>0&&c[j-1]>0)score+=1.1;if(j%9<8&&c[j+1]>0)score+=1.1;if(j%9>1&&c[j-2]>0)score+=.35;if(j%9<7&&c[j+2]>0)score+=.35}
+  }
+  if(yao(i))score-=1.8;
+  if(i>=27&&c[i]===0)score-=.6;
+  if(t[0]==='0')score-=2;
+  if(score>bestScore){bestScore=score;best=k}
+ }
+ return best;
+}
+function gRender(){
+ const b=document.getElementById('gameBoard');if(!b)return;
+ const names=['東家','南家','西家','北家'];
+ const scoreHTML=game.scores.map((v,i)=>`<div class="metric card" style="padding:9px"><small>${names[i]} ${i===0?'（あなた）':'（AI）'}</small><strong style="font-size:19px">${v.toLocaleString()}</strong></div>`).join('');
+ const discardHTML=(arr)=>arr.map(d=>`<span class="tile ${d.tsumogiri?'tsumogiri':''}" title="${d.tsumogiri?'ツモ切り':'手出し'}" style="${d.tsumogiri?'transform:rotate(90deg);margin:7px 5px;':''}">${gName(d.tile)}</span>`).join('');
+ const opp=[1,2,3].map(i=>`<div class="card" style="padding:10px;margin:8px 0"><div class="row"><b>${names[i]}・AI</b><span>${game.hands[i].length}枚</span></div><div style="font-size:12px;margin-top:5px"><span class="muted">河：</span>${discardHTML(game.discards[i])||'—'}</div></div>`).join('');
+ const hand=game.hands[0].map((t,i)=>`<button class="tile ${t[0]==='0'?'red':''}" data-gdiscard="${i}" style="height:54px;min-width:35px;font-size:16px;cursor:${game.phase==='discard'?'pointer':'default'}" ${game.phase!=='discard'?'disabled':''}>${gName(t)}</button>`).join('');
+ b.innerHTML=`<div class="grid" style="grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:12px">${scoreHTML}</div>
+ <div class="card" style="background:#f7faf8;padding:12px"><div class="row"><b>${game.wind}${game.handNo}局 ${game.honba}本場</b><span>残り ${game.wall.length}枚</span></div><div class="muted" style="font-size:12px;margin-top:6px">ドラ表示牌：${game.dora||'—'}　供託：${game.sticks}本</div></div>
+ ${opp}<div class="card" style="padding:12px;margin-top:8px"><div class="row"><b>あなたの河</b><span class="muted" style="font-size:11px">横向き＝ツモ切り／通常＝手出し</span></div><div style="margin-top:7px">${discardHTML(game.discards[0])||'—'}</div></div>
+ <div class="card" style="padding:12px;margin-top:8px"><div class="row"><b>あなたの手牌（${game.hands[0].length}枚）</b><span class="muted">牌をタップして打牌</span></div><div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:10px">${hand}</div></div>
+ <div class="card" style="padding:12px;margin-top:8px"><b>対局ログ</b><div style="max-height:130px;overflow:auto;font-size:12px;margin-top:6px">${game.log.slice(-12).reverse().map(x=>`<div>${x}</div>`).join('')}</div></div>`;
+ b.querySelectorAll('[data-gdiscard]').forEach(el=>el.onclick=()=>{if(game.phase==='discard')gDiscard(0,+el.dataset.gdiscard)});
+ document.getElementById('playStatus').textContent=game.phase==='discard'?'あなたの打牌':game.phase==='ended'?'和了':game.phase==='exhausted'?'流局':'進行中';
+ document.getElementById('autoDiscard').disabled=game.phase!=='discard';
+}
+function gAdvance(){
+ let guard=0;
+ while(game.phase==='between'&&guard++<20){
+  if(!game.wall.length){game.phase='exhausted';game.log.push('山牌がなくなりました。流局');gRender();return}
+  const seat=game.turn;
+  if(!gDraw(seat)){return}
+  if(gCanWin(seat)){game.phase='ended';game.log.push(`${seats[seat]} ツモ和了！（形・簡易役判定）`);gRender();return}
+  if(seat===0){gRender();return}
+  const k=gAIChoice(game.hands[seat]);const t=game.hands[seat][k];
+  game.hands[seat].splice(k,1);const tsumogiri=game.lastDrawBySeat[seat]===t;game.discards[seat].push({tile:t,tsumogiri});game.lastDrawBySeat[seat]=null;game.log.push(`${seats[seat]} ${tsumogiri?'ツモ切り':'手出し'} ${gName(t)}`);
+  game.turn=(seat+1)%4;game.phase='between';game.lastDraw=null;
+ }
+ gRender();
+}
+function gStart(){
+ spectatorStopTimer();spectatorActive=false;spectatorPaused=false;
+ game.wall=gDeck();game.hands=[[],[],[],[]];game.discards=[[],[],[],[]];game.scores=[25000,25000,25000,25000];game.turn=0;game.lastDrawBySeat=[null,null,null,null];game.phase='between';game.round=0;game.honba=0;game.sticks=0;game.handNo=1;game.wind='東';game.log=[];game.dealer=0;game.riichi=[false,false,false,false];game.riichiTurn=[-1,-1,-1,-1];game.ippatsu=[false,false,false,false];game.melds=[[],[],[],[]];game.furiten=[false,false,false,false];game.riichiFuriten=[false,false,false,false];game.kanCount=0;game.rinshanPending=false;game.rinshanWinner=-1;game.doraIndicators=[];game.mustDiscard=false;game.matchEnd=false;game.honba=0;game.roundResults=[];
+ for(let n=0;n<13;n++)for(let seat=0;seat<4;seat++)game.hands[seat].push(game.wall.pop());
+ game.hands=game.hands.map(gSort);
+ game.dora=game.wall.pop();game.log.push('東1局 配牌完了。あなたが東家です。');
+ gDraw(0);game.hands[0]=gSort(game.hands[0]);gRender();
+}
+document.getElementById('startGame').onclick=gStart;
+document.getElementById('sortHand').onclick=()=>{game.hands[0]=gSort(game.hands[0]);gRender()};
+
+document.getElementById('autoDiscard').onclick=()=>{if(game.phase==='discard')gDiscard(0,game.hands[0].length-1)};
+
+
+// --- 半荘進行・精算コア v2.4 ---
+function gNorm(t){return t[0]==='0'?'5'+t[1]:t}
+function gTenpai(hand){
+ // 13枚/副露なしの簡易待ち判定：牌を1枚加えて標準形または七対子になるか
+ for(let i=0;i<34;i++){
+  const t=i>=27?(i-26)+'z':(i%9+1)+['m','p','s'][Math.floor(i/9)];
+  const h=hand.concat(t);
+  if(h.length===14&&gComplete(h))return true;
+ }
+ return false;
+}
+function gNextWind(){
+ if(game.wind==='東'&&game.handNo<4){game.handNo++;return}
+ if(game.wind==='東'){game.wind='南';game.handNo=1;return}
+ if(game.handNo<4){game.handNo++;return}
+}
+function gRankSettlement(){
+ const order=[0,1,2,3].sort((a,b)=>game.scores[b]-game.scores[a]);
+ // 10-30: 1位+30, 2位+10, 3位-10, 4位-30（千点単位）
+ const uma=[30,10,-10,-30],rows=[];
+ order.forEach((seat,rank)=>rows.push({seat,rank:rank+1,score:game.scores[seat],uma:uma[rank]*1000,oka:rank===0?20000:0,final:game.scores[seat]-30000+uma[rank]*1000+(rank===0?20000:0)}));
+ return rows;
+}
+function gMatchFinish(reason){
+ game.matchEnd=true;game.phase='matchEnd';spectatorActive=false;spectatorStopTimer();
+ const rows=gRankSettlement();
+ game.log.push('半荘終了：'+reason);
+ rows.forEach(r=>game.log.push(`${seats[r.seat]} ${r.rank}位／素点${r.score.toLocaleString()}／ウマ${r.uma>0?'+':''}${r.uma.toLocaleString()}／オカ${r.oka.toLocaleString()}／精算${r.final.toLocaleString()}`));
+ spectatorRender();
+}
+function gAdvanceRound(dealerContinues,reason){
+ const oldWind=game.wind,oldNo=game.handNo,oldDealer=game.dealer;
+ if(dealerContinues){game.honba++;game.log.push(`${oldWind}${oldNo}局：親連荘（${reason}）`);}
+ else{
+  game.honba=0;game.dealer=(game.dealer+1)%4;
+  if(oldNo===4&&oldWind==='南'){
+   const dealerTop=game.scores[game.dealer]===Math.max(...game.scores);
+   if(!dealerTop){gMatchFinish('南4局終了');return}
+   // 親がトップなら西入せず終了する標準的なアガリ止め扱いではなく、ここでは延長戦をしない。
+   gMatchFinish('南4局終了');return;
+  }
+  if(oldNo===4&&oldWind==='東'){game.wind='南';game.handNo=1;}
+  else game.handNo++;
+  game.log.push(`${oldWind}${oldNo}局終了。親移動 → ${game.wind}${game.handNo}局`);
+ }
+ gBeginRound();
+}
+function gBeginRound(){
+ if(game.matchEnd)return;
+ game.wall=gDeck();game.hands=[[],[],[],[]];game.discards=[[],[],[],[]];game.lastDrawBySeat=[null,null,null,null];
+ game.riichi=[false,false,false,false];game.riichiTurn=[-1,-1,-1,-1];game.ippatsu=[false,false,false,false];game.melds=[[],[],[],[]];game.furiten=[false,false,false,false];game.riichiFuriten=[false,false,false,false];game.kanCount=0;game.rinshanPending=false;game.rinshanWinner=-1;game.doraIndicators=[];game.mustDiscard=false;
+ for(let n=0;n<13;n++)for(let seat=0;seat<4;seat++)game.hands[seat].push(game.wall.pop());
+ game.hands=game.hands.map(gSort);game.doraTile=game.wall.pop();game.dora=gName(game.doraTile);game.turn=game.dealer;game.phase='between';
+ game.log.push(`${game.wind}${game.handNo}局 ${game.honba}本場 配牌。親：${seats[game.dealer]}`);
+}
+function gSettleDraw(){
+ const tenpai=game.hands.map((h,i)=>gTenpaiMeldAware(h,(game.melds[i]||[]).length));
+ const n=tenpai.filter(Boolean).length;
+ if(n>0&&n<4){const gain=3000/n,loss=3000/(4-n);tenpai.forEach((v,i)=>game.scores[i]+=v?gain:-loss)}
+ game.log.push(`流局。テンパイ：${tenpai.map((v,i)=>v?seats[i]:'').filter(Boolean).join('・')||'なし'}。点棒移動を反映`);
+ gAdvanceRound(tenpai[game.dealer],'流局テンパイ');
+}
+function gBase(han,fu){
+ if(han>=13)return 8000;if(han>=11)return 6000;if(han>=8)return 4000;if(han>=6)return 3000;if(han>=5)return 2000;
+ return Math.min(2000,fu*Math.pow(2,han+2));
+}
+function gEvalClosed(hand,method,seat){
+ if(!gComplete(hand))return null;
+ const c=gCounts(hand),ids=hand.map(gIdx),closed=true;
+ let yaku=[],han=0,fu=20;
+ const add=(n,h)=>{if(!yaku.some(x=>x[0]===n)){yaku.push([n,h]);han+=h}};
+ if(c.filter(x=>x===2).length===7){add('七対子',2);fu=25}
+ else{
+  const ds=split(c.slice(),4);if(!ds.length)return null;
+  let best=null;
+  for(const d of ds){
+   const gs=d.g,seq=gs.filter(x=>x.t==='順'),trip=gs.filter(x=>x.t==='刻');
+   const y=[],addY=(n,h)=>{if(!y.some(x=>x[0]===n))y.push([n,h])};
+   if(method==='tsumo')addY('門前清自摸和',1);
+   if(ids.every(i=>!yao(i)))addY('断么九',1);
+   trip.forEach(g=>{if(g.i>=31)addY(['白','發','中'][g.i-31]+'刻',1);if(g.i===27+game.dealer)addY('場風牌',1);if(g.i===27+seat)addY('自風牌',1)});
+   if(trip.length===4)addY('対々和',2);
+   const suit=new Set(ids.filter(i=>i<27).map(i=>Math.floor(i/9))),hon=ids.some(i=>i>=27);
+   if(suit.size===1)addY(hon?'混一色':'清一色',hon?3:6);
+   if(ids.every(i=>yao(i))&&seq.length===0)addY('混老頭',2);
+   if(seq.length===4&&seq.some(a=>seq.some(b=>a.i===b.i&&a!==b)))addY('一盃口',1);
+   if(seq.length===4&&[0,1,2].every(r=>seq.some(g=>g.i%9===r))&&[0,1,2].every(r=>seq.some(g=>g.i>=r*9&&g.i<r*9+1)))addY('三色同順',2);
+   if(seq.length===4&&[0,3,6].every(n=>seq.some(g=>g.i%9===n)))addY('一気通貫',2);
+   if(!y.length)continue;
+   let f=20;
+   if(method==='ron')f+=10;else f+=2;
+   if(d.pair>=27&&d.pair>=31)f+=2;
+   if(d.pair===27+game.dealer)f+=2;if(d.pair===27+seat)f+=2;
+   trip.forEach(g=>f+=yao(g.i)?8:4);
+   if(method==='ron'&&f===20)f=30;
+   f=Math.ceil(f/10)*10;
+   const h=y.reduce((a,x)=>a+x[1],0);
+   const candidate={y,han:h,fu:f,base:gBase(h,f)};
+   if(!best||candidate.base>best.base)best=candidate;
+  }
+  if(!best)return null;yaku=best.yaku||best.y;han=best.han;fu=best.fu;
+ }
+ if(game.riichi[seat]){add('リーチ',1)}
+ // Dora never creates a yaku; only added after a real yaku exists.
+ if(!yaku.length)return null;
+ const dora=game.doraTile?gCounts(hand)[gIdx(game.doraTile)]||0:0;
+ const aka=hand.filter(t=>t[0]==='0').length;
+ han+=dora+aka;
+ return {yaku,han,fu,base:gBase(han,fu),dora,aka};
+}
+function gPayWin(winner,loser,method,result){
+ const dealer=winner===game.dealer,base=result.base,ceil=n=>Math.ceil(n/100)*100;
+ let transfers=[];
+ if(method==='ron'){
+  const pay=ceil(base*(dealer?6:4))+game.honba*300;
+  game.scores[loser]-=pay;game.scores[winner]+=pay;transfers.push(`${seats[loser]}→${seats[winner]} ${pay}点`);
+ }else if(dealer){
+  for(let i=0;i<4;i++)if(i!==winner){const pay=ceil(base*2)+game.honba*100;game.scores[i]-=pay;game.scores[winner]+=pay;transfers.push(`${seats[i]}→${seats[winner]} ${pay}点`)}
+ }else{
+  for(let i=0;i<4;i++)if(i!==winner){const pay=ceil(base*(i===game.dealer?2:1))+game.honba*100;game.scores[i]-=pay;game.scores[winner]+=pay;transfers.push(`${seats[i]}→${seats[winner]} ${pay}点`)}
+ }
+ if(game.sticks){game.scores[winner]+=game.sticks*1000;transfers.push(`供託 ${game.sticks*1000}点を獲得`);game.sticks=0}
+ game.log.push(`${seats[winner]} ${method==='ron'?'ロン':'ツモ'}／${result.yaku.map(x=>x[0]).join('・')} ${result.han}翻${result.fu}符`);
+ game.log.push('点棒移動：'+transfers.join('／'));
+ gAdvanceRound(winner===game.dealer,'和了');
+}
+
+// --- 観戦モード v2.3：AI4人の進行を1手ずつ可視化 ---
+let spectatorTimer=null, spectatorPaused=false, spectatorActive=false;
+function spectatorStopTimer(){if(spectatorTimer){clearTimeout(spectatorTimer);spectatorTimer=null}}
+function spectatorRender(){
+ const b=document.getElementById('gameBoard'), names=['東家 AI','南家 AI','西家 AI','北家 AI'];
+ const disc=arr=>arr.map(d=>`<span class="tile ${d.tsumogiri?'red':''}" title="${d.tsumogiri?'ツモ切り':'手出し'}" style="${d.tsumogiri?'transform:rotate(90deg);margin:7px 5px;':''}">${gName(d.tile)}</span>`).join('');
+ const seatsHtml=[0,1,2,3].map(i=>`<div class="card" style="padding:10px;min-width:0"><div class="row"><b>${names[i]} ${game.riichi[i]?'・リーチ':''}</b><span class="pill">${game.turn===i?'手番':''}</span></div><div class="muted" style="font-size:12px;margin:5px 0">手牌 ${game.hands[i].length}枚</div><div style="display:flex;flex-wrap:wrap;gap:2px">${game.hands[i].map(t=>`<span class="tile" style="background:#e8eee9;color:#738078">■</span>`).join('')}</div><div class="muted" style="font-size:12px;margin-top:7px">副露：${(game.melds[i]||[]).map(m=>`<span class="tile">${m.tiles.map(gName).join(' ')}</span>`).join('')||'—'}</div><div class="muted" style="font-size:12px;margin-top:8px">河（横向き＝ツモ切り）</div><div style="display:flex;flex-wrap:wrap;gap:2px">${disc(game.discards[i])||'—'}</div></div>`).join('');
+ const score=game.scores.map((v,i)=>`<div class="card metric" style="padding:8px"><small>${names[i]}</small><strong style="font-size:18px">${v.toLocaleString()}点</strong></div>`).join('');
+ b.innerHTML=`<div class="grid" style="grid-template-columns:repeat(4,1fr);gap:7px">${score}</div>
+ <div class="card" style="margin:10px 0;padding:12px;background:#f7faf8"><div class="row"><b>${game.wind}${game.handNo}局 ${game.honba}本場</b><span>残り ${game.wall.length}枚</span></div><div class="muted" style="font-size:12px">ドラ表示牌：${game.dora||'—'}　供託：${game.sticks}本　順位ウマ：10-30</div></div>
+ <div class="grid" style="grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">${seatsHtml}</div>
+ <div class="card" style="padding:12px;margin-top:10px"><div class="row"><b>実況ログ</b><span class="muted" style="font-size:11px">${spectatorPaused?'一時停止中':'自動再生中'}</span></div><div id="spectatorLog" style="max-height:210px;overflow:auto;font-size:12px;margin-top:6px">${game.log.slice(-18).reverse().map(x=>`<div style="padding:3px 0;border-bottom:1px solid #edf0ed">${esc(x)}</div>`).join('')}</div></div>`;
+ document.getElementById('playStatus').textContent=spectatorPaused?'観戦一時停止':game.phase==='ended'?'和了':game.phase==='exhausted'?'流局':'AI観戦中';
+ document.getElementById('pauseSpectator').disabled=!spectatorActive;
+ document.getElementById('pauseSpectator').textContent=spectatorPaused?'再開':'一時停止';
+ document.getElementById('stepSpectator').disabled=!spectatorActive||!spectatorPaused;
+ document.getElementById('autoDiscard').disabled=true;
+}
+function spectatorStart(){
+ spectatorStopTimer();spectatorActive=true;spectatorPaused=false;
+ game.wall=gDeck();game.hands=[[],[],[],[]];game.discards=[[],[],[],[]];game.scores=[25000,25000,25000,25000];
+ game.turn=0;game.lastDrawBySeat=[null,null,null,null];game.phase='between';game.round=0;game.honba=0;game.sticks=0;game.handNo=1;game.wind='東';game.log=[];game.dealer=0;game.riichi=[false,false,false,false];game.riichiTurn=[-1,-1,-1,-1];game.ippatsu=[false,false,false,false];game.melds=[[],[],[],[]];game.furiten=[false,false,false,false];game.riichiFuriten=[false,false,false,false];game.kanCount=0;game.rinshanPending=false;game.rinshanWinner=-1;game.doraIndicators=[];game.mustDiscard=false;game.matchEnd=false;game.honba=0;game.roundResults=[];
+ for(let n=0;n<13;n++)for(let seat=0;seat<4;seat++)game.hands[seat].push(game.wall.pop());
+ game.hands=game.hands.map(gSort);game.doraTile=game.wall.pop();game.dora=gName(game.doraTile);
+ game.riichi=[false,false,false,false];game.matchEnd=false;game.roundResults=[];
+ game.log.push('東1局 配牌完了。AI4人の観戦を開始します。');
+ spectatorRender();spectatorSchedule(250);
+}
+function spectatorSchedule(delay){
+ spectatorStopTimer();
+ if(!spectatorActive||spectatorPaused)return;
+ spectatorTimer=setTimeout(()=>{spectatorStep();},delay??Number(document.getElementById('spectatorSpeed').value));
+}
+function spectatorNextHand(){gSettleDraw();}
+
+// --- 局面管理 v2.5：鳴き・リーチ・副露手の役符翻 ---
+function gSameTile(a,b){return gNorm(a)===gNorm(b)}
+function gTileCount(hand,t){return hand.filter(x=>gSameTile(x,t)).length}
+function gCanPon(hand,t){return gTileCount(hand,t)>=2}
+function gChiOptions(hand,t){
+ const id=gIdx(t);if(id>=27)return [];
+ const base=Math.floor(id/9)*9,rank=id%9,opts=[];
+ for(const start of [rank-2,rank-1,rank]){
+  if(start<0||start>6)continue;
+  const need=[base+start,base+start+1,base+start+2].filter(x=>x!==id);
+  const copy=hand.slice(),take=[];
+  let ok=true;
+  for(const n of need){const tile=copy.find(x=>gIdx(x)===n);if(!tile){ok=false;break}take.push(tile);copy.splice(copy.indexOf(tile),1)}
+  if(ok)opts.push({tiles:take,sequence:[base+start,base+start+1,base+start+2]});
+ }
+ return opts;
+}
+function gCompleteMeldAware(concealed,meldCount){
+ const needed=14-3*meldCount;
+ if(concealed.length!==needed)return false;
+ if(meldCount===0&&concealed.length===14&&gCounts(concealed).filter(x=>x===2).length===7)return true;
+ return split(gCounts(concealed),4-meldCount).length>0;
+}
+function gTenpaiMeldAware(hand,meldCount){
+ if(hand.length!==13-3*meldCount)return false;
+ for(let i=0;i<34;i++){
+  const t=i>=27?(i-26)+'z':(i%9+1)+['m','p','s'][Math.floor(i/9)];
+  if(gCompleteMeldAware(hand.concat(t),meldCount))return true;
+ }
+ return false;
+}
+function gDoraIndex(){
+ if(!game.doraTile)return -1;
+ const i=gIdx(game.doraTile);
+ if(i>=27)return i<31?27+(i-26)%4:31+(i-30)%3;
+ return Math.floor(i/9)*9+(i%9+1)%9;
+}
+function gEvaluateHand(seat,method,winningTile){
+ const melds=game.melds[seat]||[],hand=game.hands[seat].slice();
+ const full=method==='tsumo'&&hand.length===14-3*melds.length?hand:hand.concat(winningTile||[]);
+ if(!gCompleteMeldAware(full,melds.length))return null;
+ const all=full.concat(melds.flatMap(m=>m.tiles)),ids=all.map(gIdx),counts=gCounts(all);
+ const closed=melds.length===0,ds=split(gCounts(full),4-melds.length);
+ let candidates=[];
+ const addUnique=(arr,name,h)=>{if(!arr.some(x=>x[0]===name))arr.push([name,h])};
+ if(closed&&counts.filter(x=>x===2).length===7){
+  const y=[['七対子',2]];
+  if(ids.every(i=>!yao(i)))addUnique(y,'断么九',1);
+  const suit=new Set(ids.filter(i=>i<27).map(i=>Math.floor(i/9))),hon=ids.some(i=>i>=27);
+  if(suit.size===1)addUnique(y,hon?'混一色':'清一色',hon?3:6);
+  if(game.riichi[seat])addUnique(y,'リーチ',1);
+  if(method==='tsumo')addUnique(y,'門前清自摸和',1);
+  if(method==='tsumo'&&game.rinshanWinner===seat)addUnique(y,'嶺上開花',1);
+  if(method==='chankan')addUnique(y,'槍槓',1);
+  let han=y.reduce((a,x)=>a+x[1],0),di=gDoraIndex(),dora=di>=0?counts[di]:0,aka=all.filter(t=>t[0]==='0').length;
+  han+=dora+aka;
+  return {yaku:y,han,fu:25,base:gBase(han,25),dora,aka,closed};
+ }
+ for(const d of ds){
+  const groups=d.g.concat(melds.map(m=>({t:m.type==='チー'?'順':m.type==='ポン'?'刻':'槓',i:m.base,open:true})));
+  const seq=groups.filter(g=>g.t==='順'),trip=groups.filter(g=>g.t==='刻'||g.t==='槓');
+  const y=[];
+  if(closed&&game.riichi[seat])addUnique(y,'リーチ',1);
+  if(closed&&game.ippatsu[seat])addUnique(y,'一発',1);
+  if(closed&&method==='tsumo')addUnique(y,'門前清自摸和',1);
+  if(method==='tsumo'&&game.rinshanWinner===seat)addUnique(y,'嶺上開花',1);
+  if(method==='chankan')addUnique(y,'槍槓',1);
+  if(ids.every(i=>!yao(i)))addUnique(y,'断么九',1);
+  trip.forEach(g=>{
+   if(g.i>=31)addUnique(y,['白','發','中'][g.i-31]+'刻',1);
+   if(g.i===27+game.dealer)addUnique(y,'場風牌',1);
+   if(g.i===27+seat)addUnique(y,'自風牌',1);
+  });
+  if(trip.length===4)addUnique(y,'対々和',2);
+  const suits=new Set(ids.filter(i=>i<27).map(i=>Math.floor(i/9))),hasHonor=ids.some(i=>i>=27);
+  if(suits.size===1)addUnique(y,hasHonor?'混一色':'清一色',closed?(hasHonor?3:6):(hasHonor?2:5));
+  if(seq.length===4&&[0,3,6].every(n=>seq.some(g=>g.i%9===n)))addUnique(y,'一気通貫',closed?2:1);
+  for(let rank=0;rank<=6;rank++)if([0,1,2].every(su=>seq.some(g=>g.i===su*9+rank)))addUnique(y,'三色同順',closed?2:1);
+  const allYao=groups.every(g=>g.t==='順'?(yao(g.i)&&yao(g.i+2)):yao(g.i))&&yao(d.pair);
+  if(allYao)addUnique(y,hasHonor?'混全帯么九':'純全帯么九',closed?(hasHonor?2:3):(hasHonor?1:2));
+  if(!y.length)continue;
+  let fu=20;
+  if((method==='ron'||method==='chankan')&&closed)fu+=10;
+  if(method==='tsumo'&&!(closed&&seq.length===4&&trip.length===0&&d.pair<27&&![31,32,33].includes(d.pair)))fu+=2;
+  if(d.pair>=31)fu+=2;
+  if(d.pair===27+game.dealer)fu+=2;if(d.pair===27+seat)fu+=2;
+  // winning-tile wait fu: evaluate a conservative tanki/kanchan/penchan approximation
+  if(winningTile){
+   const wi=gIdx(winningTile);
+   if(d.pair===wi)fu+=2;
+   else {const wg=d.g.find(g=>g.t==='順'&&wi>=g.i&&wi<=g.i+2);
+    if(wg){const pos=wi-wg.i;if(pos===1||(pos===0&&wg.i%9===6)||(pos===2&&wg.i%9===0))fu+=2;}
+   }
+  }
+  groups.forEach(g=>{if(g.t!=='刻'&&g.t!=='槓')return;const open=!!g.open;const term=yao(g.i);fu+=g.t==='槓'?(open?(term?16:8):(term?32:16)):(open?(term?4:2):(term?8:4));});
+  const pinfu=closed&&seq.length===4&&trip.length===0&&d.pair<27&&![31,32,33].includes(d.pair)&&fu===20;
+  if(pinfu&&method==='tsumo')fu=20;
+  else fu=Math.ceil(fu/10)*10;
+  if(fu===20&&method==='ron')fu=30;
+  const hanY=y.reduce((a,x)=>a+x[1],0);
+  const di=gDoraIndex(),dora=di>=0?counts[di]:0,aka=all.filter(t=>t[0]==='0').length;
+  const han=hanY+dora+aka,base=gBase(han,fu);
+  candidates.push({yaku:y,han,fu,base,dora,aka,closed});
+ }
+ if(!candidates.length)return null;
+ candidates.sort((a,b)=>b.base-a.base||b.han-a.han||b.fu-a.fu);
+ const best=candidates[0];
+ // Dora-only hands are not valid: require at least one non-dora yaku.
+ return best;
+}
+function gRiichiCanDeclare(seat){
+ return !game.melds[seat].length&&!game.riichi[seat]&&game.scores[seat]>=1000&&gTenpaiMeldAware(game.hands[seat],0);
+}
+function gDeclareRiichi(seat){
+ if(!gRiichiCanDeclare(seat))return false;
+ game.riichi[seat]=true;game.ippatsu[seat]=true;game.scores[seat]-=1000;game.sticks++;
+ game.log.push(`${seats[seat]} リーチ宣言（供託1,000点）`);
+ return true;
+}
+
+// --- 例外処理 v2.6：フリテン・槓・ロン優先順位 ---
+function gWaitTiles(seat){
+ const hand=game.hands[seat]||[], melds=(game.melds[seat]||[]).length, waits=[];
+ if(hand.length!==13-3*melds)return waits;
+ for(let i=0;i<34;i++){
+  const t=i>=27?(i-26)+'z':(i%9+1)+['m','p','s'][Math.floor(i/9)];
+  if(gCompleteMeldAware(hand.concat(t),melds))waits.push(t);
+ }
+ return waits;
+}
+function gIsPermanentFuriten(seat){
+ const waits=gWaitTiles(seat), river=game.discards[seat]||[];
+ return waits.some(w=>river.some(d=>gSameTile(d.tile,w)));
+}
+function gCanRon(seat,tile){
+ if(game.furiten[seat]||game.riichiFuriten[seat]||gIsPermanentFuriten(seat))return false;
+ return !!gEvaluateHand(seat,'ron',tile);
+}
+function gPassRon(seat){
+ // リーチ後の見逃しは局終了まで、通常時は次の自摸までロン不可。
+ if(game.riichi[seat])game.riichiFuriten[seat]=true;
+ else game.furiten[seat]=true;
+}
+function gResetTemporaryFuriten(seat){game.furiten[seat]=false}
+
+function gWaitSignature(hand,meldCount){
+ const waits=[];
+ if(hand.length!==13-3*meldCount)return waits;
+ for(let i=0;i<34;i++){
+  const t=i>=27?(i-26)+'z':(i%9+1)+['m','p','s'][Math.floor(i/9)];
+  if(gCompleteMeldAware(hand.concat(t),meldCount))waits.push(gNorm(t));
+ }
+ return waits.sort().join(',');
+}
+function gCanRiichiAnkan(seat,tile){
+ if(!game.riichi[seat])return true;
+ // リーチ後は「直前の13枚の待ち」と「暗槓後の待ち」が完全一致し、
+ // かつ暗槓牌が直前の自摸牌である場合だけ許可する。
+ const drawn=game.lastDrawBySeat?.[seat];
+ if(!drawn||!gSameTile(drawn,tile))return false;
+ const hand=game.hands[seat],norm=gNorm(tile);
+ if(hand.filter(t=>gNorm(t)===norm).length!==4)return false;
+ const before=hand.slice();before.splice(before.findIndex(t=>gSameTile(t,drawn)),1);
+ const after=hand.filter(t=>gNorm(t)!==norm);
+ return gWaitSignature(before,game.melds[seat].length)===
+        gWaitSignature(after,game.melds[seat].length+1);
+}
+function gChankanWinners(declarer,tile,kanType){
+ const winners=[];
+ // 加槓への槍槓。暗槓への槍槓は国士無双のみ許可。
+ for(let d=1;d<4;d++){
+  const seat=(declarer+d)%4;
+  if(game.furiten[seat]||game.riichiFuriten[seat]||gIsPermanentFuriten(seat))continue;
+  let result=null;
+  if(kanType==='暗槓'){
+   // 暗槓への槍槓は国士無双のみ。通常の和了形判定に依存させず直接検査。
+   const full=game.hands[seat].concat(tile),ids=full.map(gIdx);
+   const orphanIds=[0,8,9,17,18,26,27,28,29,30,31,32,33];
+   if(ids.length!==14||!orphanIds.every(i=>ids.includes(i))||!orphanIds.some(i=>ids.filter(x=>x===i).length===2))continue;
+   result={yaku:[['国士無双',13]],han:13,fu:0,base:8000,dora:0,aka:0,closed:true};
+  }else if(kanType==='加槓'){
+   result=gEvaluateHand(seat,'chankan',tile);
+   if(!result)continue;
+  }else continue;
+  winners.push({seat,result});
+ }
+ return winners;
+}
+function gKanTiles(seat,type,tile){
+ const hand=game.hands[seat],melds=game.melds[seat];
+ if(!hand||!melds||game.kanCount>=4||game.wall.length<2)return false;
+ if(game.riichi[seat]&&(type!=='暗槓'||!gCanRiichiAnkan(seat,tile)))return false;
+ const norm=gNorm(tile);
+ let pon=null,added=null,group=[];
+ if(type==='暗槓'){
+  group=hand.filter(t=>gNorm(t)===norm);
+  if(group.length!==4)return false;
+ }else if(type==='加槓'){
+  pon=melds.find(m=>m.type==='ポン'&&gNorm(m.tiles[0])===norm);
+  const i=hand.findIndex(t=>gNorm(t)===norm);
+  if(!pon||i<0)return false;
+  added=hand[i];
+  // 加槓牌に対する槍槓を先に解決。成立時は槓を確定しない。
+  const robbers=gChankanWinners(seat,added,'加槓');
+  if(robbers.length){
+   const w=robbers[0];
+   robbers.slice(1).forEach(x=>gPassRon(x.seat));
+   gPayWin(w.seat,seat,'ron',w.result);
+   game.log.push(`${seats[w.seat]} 槍槓：${gName(added)}（加槓不成立）`);game.kanRobbed=true;
+   return true;
+  }
+ }else if(type==='大明槓'){
+  group=hand.filter(t=>gNorm(t)===norm).slice(0,3);
+  if(group.length!==3)return false;
+ }else return false;
+
+ if(type==='暗槓'){
+  group.forEach(t=>hand.splice(hand.findIndex(x=>x===t),1));
+  melds.push({type:'暗槓',tiles:group,base:gIdx(tile),from:seat});
+ }else if(type==='加槓'){
+  const i=hand.findIndex(t=>gNorm(t)===norm);
+  added=hand.splice(i,1)[0];pon.type='加槓';pon.tiles.push(added);
+ }else{
+  group.forEach(t=>hand.splice(hand.findIndex(x=>x===t),1));
+  melds.push({type:'大明槓',tiles:[...group,tile],base:gIdx(tile),from:-1});
+ }
+ game.kanCount++;
+ game.ippatsu=[false,false,false,false];
+ const rinshan=game.wall.pop();
+ hand.push(rinshan);
+ game.rinshanPending=true;game.rinshanWinner=seat;game.lastDrawBySeat[seat]=rinshan;game.kanRobbed=false;
+ game.doraIndicators=game.doraIndicators||[];
+ if(game.doraIndicators.length<4&&game.wall.length>0){
+  game.doraIndicators.push(game.wall.pop());
+  game.doraTile=game.doraIndicators[game.doraIndicators.length-1];
+  game.dora=gName(game.doraTile);
+ }
+ game.log.push(`${seats[seat]} ${type}：嶺上牌 ${gName(rinshan)}／槓ドラ表示牌更新`);
+ return true;
+}
+
+function gRonWinners(from,tile){
+ const winners=[];
+ for(let d=1;d<4;d++){
+  const seat=(from+d)%4;
+  if(gCanRon(seat,tile))winners.push({seat,result:gEvaluateHand(seat,'ron',tile)});
+ }
+ return winners;
+}
+
+function gCallAfterDiscard(from,tile){
+ // ロン優先。標準的な頭ハネ（放銃者から近い上家側1名）を採用。
+ const ronWinners=gRonWinners(from,tile);
+ if(ronWinners.length){
+  const winner=ronWinners[0];
+  // 同時ロン候補のうち、頭ハネで採用されなかった者は見逃し扱い。
+  ronWinners.slice(1).forEach(x=>gPassRon(x.seat));
+  gPayWin(winner.seat,from,'ron',winner.result);return true;
+ }
+ let caller=-1,callType='',callTiles=[];
+ for(let d=1;d<4;d++){
+  const seat=(from+d)%4,h=game.hands[seat];
+  if(game.riichi[seat])continue;
+  const same=h.filter(t=>gSameTile(t,tile));
+  if(same.length>=3){caller=seat;callType='大明槓';callTiles=same.slice(0,3);break}
+  if(same.length>=2){caller=seat;callType='ポン';callTiles=same.slice(0,2);break}
+ }
+ if(caller<0){
+  const seat=(from+1)%4;
+  if(!game.riichi[seat]){
+   const opts=gChiOptions(game.hands[seat],tile);
+   if(opts.length){caller=seat;callType='チー';callTiles=opts[0].tiles}
+  }
+ }
+ if(caller>=0){
+  if(callType==='大明槓'){
+   if(!gKanTiles(caller,'大明槓',tile))return false;
+   game.discards[from].pop();
+   game.turn=caller;game.mustDiscard=true;
+   return true;
+  }
+  callTiles.forEach(t=>{const i=game.hands[caller].findIndex(x=>gSameTile(x,t));if(i>=0)game.hands[caller].splice(i,1)});
+  const tiles=[...callTiles,tile],base=Math.min(...tiles.map(gIdx));
+  game.melds[caller].push({type:callType,tiles,base,from});
+  game.discards[from].pop();
+  game.ippatsu=[false,false,false,false];
+  game.turn=caller;game.mustDiscard=true;
+  game.log.push(`${seats[caller]} ${callType}：${tiles.map(gName).join(' ')}`);
+  return true;
+ }
+ return false;
+}
+function gScoreHandForTest(hand, melds, method='ron', seat=1){
+ const oldHands=game.hands,oldMelds=game.melds,oldRiichi=game.riichi,oldIppatsu=game.ippatsu;
+ game.hands=oldHands.map(x=>x.slice());game.melds=oldMelds.map(x=>x.slice());game.riichi=oldRiichi.slice();game.ippatsu=oldIppatsu.slice();
+ game.hands[seat]=hand.slice(0,-1);game.melds[seat]=melds||[];
+ const result=gEvaluateHand(seat,method,hand[hand.length-1]);
+ game.hands=oldHands;game.melds=oldMelds;game.riichi=oldRiichi;game.ippatsu=oldIppatsu;
+ return result;
+}
+
+
+function gTryAiKan(seat){
+ const hand=game.hands[seat],melds=game.melds[seat]||[];
+ if(game.kanCount>=4||game.wall.length<2)return false;
+ // 加槓を先に試す。リーチ中は加槓禁止。
+ if(!game.riichi[seat]){
+  for(const m of melds){
+   if(m.type==='ポン'){
+    const t=m.tiles[0],i=hand.findIndex(x=>gSameTile(x,t));
+    if(i>=0){gKanTiles(seat,'加槓',hand[i]);if(game.kanRobbed)return true;game.mustDiscard=true;game.turn=seat;return true}
+   }
+  }
+ }
+ // 暗槓。リーチ中は直前の自摸牌かつ待ち不変の条件を満たす場合のみ。
+ const counts={};
+ hand.forEach(t=>{const n=gNorm(t);counts[n]=(counts[n]||0)+1});
+ for(const n of Object.keys(counts)){
+  if(counts[n]===4&&(!game.riichi[seat]||gCanRiichiAnkan(seat,n))){
+   const t=hand.find(x=>gNorm(x)===n);
+   if(gKanTiles(seat,'暗槓',t)){game.mustDiscard=true;game.turn=seat;return true}
+  }
+ }
+ return false;
+}
+
+function spectatorStep(){
+ if(!spectatorActive)return;
+ if(game.mustDiscard){
+  const seat=game.turn,k=game.riichi[seat]?game.hands[seat].length-1:gAIChoice(game.hands[seat]);
+  const tile=game.hands[seat].splice(k,1)[0];game.discards[seat].push({tile,tsumogiri:false});
+  game.log.push(`${seats[seat]} 鳴き後打牌 ${gName(tile)}`);
+  game.mustDiscard=false;game.ippatsu=[false,false,false,false];
+  if(gCallAfterDiscard(seat,tile)){spectatorRender();if(spectatorActive)spectatorSchedule();return}
+  game.turn=(seat+1)%4;spectatorRender();spectatorSchedule();return;
+ }
+ if(!game.wall.length){gSettleDraw();spectatorRender();if(spectatorActive)spectatorSchedule();return}
+ const seat=game.turn,drawn=game.wall.pop();
+ gResetTemporaryFuriten(seat);
+ game.hands[seat].push(drawn);game.lastDrawBySeat[seat]=drawn;
+ game.log.push(`${seats[seat]} ツモ ${gName(drawn)}`);
+ const winResult=gEvaluateHand(seat,'tsumo',drawn);
+ if(winResult){gPayWin(seat,-1,'tsumo',winResult);game.rinshanPending=false;game.rinshanWinner=-1;spectatorRender();if(spectatorActive)spectatorSchedule();return}
+ game.rinshanPending=false;game.rinshanWinner=-1;
+ if(gTryAiKan(seat)){
+  if(game.kanRobbed){game.kanRobbed=false;spectatorRender();if(spectatorActive)spectatorSchedule();return}
+  spectatorRender();spectatorSchedule();return;
+ }
+ const k=game.riichi[seat]?game.hands[seat].length-1:gAIChoice(game.hands[seat]);
+ const tile=game.hands[seat].splice(k,1)[0];
+ const tsumogiri=game.lastDrawBySeat[seat]===tile;game.lastDrawBySeat[seat]=null;
+ game.discards[seat].push({tile,tsumogiri});
+ game.log.push(`${seats[seat]} ${tsumogiri?'ツモ切り':'手出し'} ${gName(tile)}`);
+ if(!game.riichi[seat]&&gRiichiCanDeclare(seat))gDeclareRiichi(seat);
+ if(gCallAfterDiscard(seat,tile)){spectatorRender();if(spectatorActive)spectatorSchedule();return}
+ game.turn=(seat+1)%4;game.phase='between';
+ spectatorRender();spectatorSchedule();
+}
+document.getElementById('startSpectator').onclick=spectatorStart;
+document.getElementById('pauseSpectator').onclick=()=>{
+ if(!spectatorActive)return;
+ spectatorPaused=!spectatorPaused;
+ if(spectatorPaused)spectatorStopTimer();else spectatorSchedule(100);
+ spectatorRender();
+};
+document.getElementById('stepSpectator').onclick=()=>{if(spectatorActive&&spectatorPaused)spectatorStep()};
+document.getElementById('spectatorSpeed').onchange=()=>{if(spectatorActive&&!spectatorPaused)spectatorSchedule(80)};
+
+
+// --- Self-play training: lightweight online policy adaptation ---
+const TRAIN_KEY='mahjong-ai-lab-training-v1';
+const featureNames=['対子保持','刻子保持','連続牌','一間差','么九牌の孤立抑制','字牌の孤立抑制'];
+function defaultPolicies(){return Array.from({length:4},(_,i)=>[1.5+i*.05,2.5-i*.04,1.2+i*.03,.45,.75,.6])}
+function loadTraining(){try{return JSON.parse(localStorage.getItem(TRAIN_KEY))||{games:0,policies:defaultPolicies(),wins:[0,0,0,0],draws:0,history:[]}}catch(e){return {games:0,policies:defaultPolicies(),wins:[0,0,0,0],draws:0,history:[]}}}
+let training=loadTraining();
+function saveTraining(){localStorage.setItem(TRAIN_KEY,JSON.stringify(training));renderTraining()}
+function featForHand(hand){
+ const c=cnt(hand),f=[0,0,0,0,0,0];
+ for(let i=0;i<34;i++){
+  if(c[i]>=2)f[0]+=1;
+  if(c[i]>=3)f[1]+=1;
+  if(i<27&&c[i]){
+   if(i%9<8&&c[i+1])f[2]+=Math.min(c[i],c[i+1]);
+   if(i%9<7&&c[i+2])f[3]+=Math.min(c[i],c[i+2])*.7;
+  }
+  if(c[i]===1&&yao(i)){if(i>=27)f[5]-=1;else f[4]-=.6}
+ }
+ return f;
+}
+function dot(a,b){return a.reduce((n,x,i)=>n+x*b[i],0)}
+function trainingDeck(){return gDeck()}
+function policyDiscard(hand,weights){
+ let best=0,bestScore=-1e9,bestFeatures=null;
+ for(let k=0;k<hand.length;k++){
+  const rest=hand.slice();rest.splice(k,1);
+  const f=featForHand(rest),score=dot(weights,f);
+  if(score>bestScore){bestScore=score;best=k;bestFeatures=f}
+ }
+ return {index:best,features:bestFeatures||[0,0,0,0,0,0]};
+}
+function runSelfPlayOne(){
+ const wall=trainingDeck(),hands=[[],[],[],[]],discarded=[[],[],[],[]],traces=[[],[],[],[]];
+ for(let n=0;n<13;n++)for(let seat=0;seat<4;seat++)hands[seat].push(wall.pop());
+ let turn=0,winner=-1,draw=false,turns=0;
+ while(wall.length&&turns++<160){
+  const t=wall.pop();hands[turn].push(t);
+  if(gCanWin(hands[turn])){winner=turn;break}
+  const choice=policyDiscard(hands[turn],training.policies[turn]);
+  const thrown=hands[turn].splice(choice.index,1)[0];
+  traces[turn].push(choice.features);discarded[turn].push(thrown);
+  turn=(turn+1)%4;
+ }
+ if(winner<0)draw=true;
+ const quality=hands.map(h=>dot(training.policies[0],featForHand(h)));
+ if(winner>=0)training.wins[winner]++;else training.draws++;
+ const rate=Number(document.getElementById('trainRate').value);
+ for(let seat=0;seat<4;seat++){
+  const trace=traces[seat];if(!trace.length)continue;
+  const avg=featureNames.map((_,j)=>trace.reduce((n,f)=>n+f[j],0)/trace.length);
+  const reward=winner===seat?1:(winner<0?(quality[seat]-quality.reduce((a,b)=>a+b,0)/4)*.08:-.22);
+  for(let j=0;j<6;j++){
+   const baseline=[1.2,1.8,1.0,.35,-.35,-.3][j];
+   training.policies[seat][j]=Math.max(-4,Math.min(6,training.policies[seat][j]+rate*reward*(avg[j]-baseline)));
+  }
+ }
+ training.games++;
+ return {winner,draw,turns};
+}
+function renderTraining(){
+ const g=document.getElementById('trainedGames');if(!g)return;
+ g.textContent=training.games.toLocaleString();
+ document.getElementById('modelVersion').textContent=training.games?'学習済み':'初期状態';
+ const total=training.wins.reduce((a,b)=>a+b,0);
+ document.getElementById('trainingSummary').innerHTML=`<div class="grid" style="grid-template-columns:repeat(4,1fr);gap:8px">${training.wins.map((w,i)=>`<div class="card" style="padding:10px"><small>AI ${i+1} 勝利</small><strong style="font-size:20px">${w}</strong><small>${training.games?Math.round(w/training.games*1000)/10:0}%</small></div>`).join('')}<div class="card" style="padding:10px"><small>流局</small><strong style="font-size:20px">${training.draws}</strong></div></div>`;
+ document.getElementById('trainingWeights').innerHTML=`<h4 style="margin:12px 0 6px">現在の学習重み</h4><table><thead><tr><th>評価項目</th>${training.policies.map((_,i)=>`<th>AI${i+1}</th>`).join('')}</tr></thead><tbody>${featureNames.map((n,j)=>`<tr><td>${n}</td>${training.policies.map(w=>`<td>${w[j].toFixed(3)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+}
+document.getElementById('runTraining').onclick=()=>{
+ const n=Number(document.getElementById('trainGames').value),btn=document.getElementById('runTraining');
+ btn.disabled=true;document.getElementById('trainingStatus').textContent=`学習中：${n}対局を実行しています…`;
+ let winsBefore=training.wins.slice(),drawBefore=training.draws;
+ for(let i=0;i<n;i++)runSelfPlayOne();
+ saveTraining();
+ const newWins=training.wins.map((w,i)=>w-winsBefore[i]);
+ document.getElementById('trainingStatus').textContent=`完了：${n}対局を追加。今回の勝利数 AI1:${newWins[0]} / AI2:${newWins[1]} / AI3:${newWins[2]} / AI4:${newWins[3]}、流局:${training.draws-drawBefore}。`;
+ btn.disabled=false;
+};
+document.getElementById('resetTraining').onclick=()=>{
+ if(!confirm('学習対局数・勝敗・AIの学習重みを初期化しますか？'))return;
+ training={games:0,policies:defaultPolicies(),wins:[0,0,0,0],draws:0,history:[]};saveTraining();
+ document.getElementById('trainingStatus').textContent='学習結果を初期化しました。';
+};
+renderTraining();
+</script>
+
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(err => console.warn('Service Worker registration failed:', err));
+  });
+}
+</script>
+
+</body></html>
